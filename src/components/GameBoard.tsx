@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { LightbulbIcon, Lock, CheckCircle2 } from 'lucide-react';
 import { GameTile } from './GameTile';
 import type { HintState } from '../types/game.types';
 
@@ -85,17 +84,17 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
             const isUnlockedNotViewed = hint?.unlocked && !hint?.revealed;
             
             return (
-              <div key={rowIndex} className="flex gap-3 justify-center items-center">
-                {/* Three-state light bulb indicator */}
+              <div key={rowIndex} className="flex flex-col gap-1.5">
+                {/* Rectangular indicator light bar on top of each row */}
                 <button 
                   onClick={() => handleHintClick(rowIndex)}
                   className={`
-                    relative flex-shrink-0 p-2 rounded-full transition-all duration-300
+                    relative h-1.5 rounded-full transition-all duration-300 mx-auto
                     ${isLocked 
-                      ? 'opacity-25 cursor-not-allowed' 
+                      ? 'w-12 bg-gray-200 opacity-40 cursor-not-allowed' 
                       : isUnlockedNotViewed
-                      ? 'hover:bg-yellow-50 hover:scale-110 cursor-pointer active:scale-95'
-                      : 'hover:bg-green-50 hover:scale-105 cursor-pointer active:scale-95'
+                      ? 'w-16 bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.6)] cursor-pointer hover:shadow-[0_0_16px_rgba(251,191,36,0.8)] hover:w-20 active:scale-95'
+                      : 'w-16 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] cursor-pointer hover:shadow-[0_0_12px_rgba(16,185,129,0.6)] hover:w-20 active:scale-95'
                     }
                   `}
                   aria-label={
@@ -107,34 +106,14 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
                   }
                   disabled={isLocked}
                 >
-                  {/* State 1: Locked - Gray bulb with lock icon */}
-                  {isLocked && (
-                    <div className="relative">
-                      <LightbulbIcon className="h-6 w-6 text-gray-300" />
-                      <Lock className="h-3 w-3 text-gray-400 absolute -bottom-0.5 -right-0.5" />
-                    </div>
-                  )}
-                  
-                  {/* State 2: Unlocked but not viewed - Glowing yellow bulb */}
+                  {/* Animated shimmer effect for unlocked hints */}
                   {isUnlockedNotViewed && (
-                    <div className="relative">
-                      <LightbulbIcon className="h-6 w-6 text-amber-500 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
-                      {/* Subtle glow indicator */}
-                      <div className="absolute inset-0 rounded-full bg-amber-400/20" />
-                    </div>
-                  )}
-                  
-                  {/* State 3: Viewed - Green bulb with checkmark */}
-                  {isRevealed && !isLocked && (
-                    <div className="relative">
-                      <LightbulbIcon className="h-6 w-6 text-emerald-500" />
-                      <CheckCircle2 className="h-3 w-3 text-emerald-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
-                    </div>
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite]" />
                   )}
                 </button>
                 
                 {/* Game tiles */}
-                <div className="flex gap-3 sm:gap-2">
+                <div className="flex gap-3 sm:gap-2 justify-center">
                   {row.letters.map((letter, colIndex) => (
                     <GameTile
                       key={`${rowIndex}-${colIndex}`}
@@ -159,12 +138,12 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
             className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform transition-all animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300"
           >
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <LightbulbIcon className="h-8 w-8 text-yellow-500 animate-pulse" />
+              <div className="flex-shrink-0 text-4xl">
+                💡
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-xl mb-3 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                  💡 Hint #{showPopup + 1}
+                  Hint #{showPopup + 1}
                 </h3>
                 <p className="text-gray-700 text-lg leading-relaxed">
                   {hints[showPopup]?.text || 'No hint available'}
