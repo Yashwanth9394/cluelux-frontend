@@ -55,13 +55,13 @@ export function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled
                 disabled={disabled}
                 className={`h-11 border ${
                   isSpecial ? 'px-2 min-w-[50px] text-[10px]' : 'w-8 p-0 text-xs'
-                } ${getKeyColor(key)} rounded-lg shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${getKeyColor(key)} rounded-lg shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 variant="secondary"
               >
                 {key === 'BACK' ? (
                   <Delete className="w-3.5 h-3.5" />
                 ) : (
-                  <span className="uppercase">{key}</span>
+                  <span className="uppercase font-semibold">{key}</span>
                 )}
               </Button>
             );

@@ -69,10 +69,13 @@ export default function App() {
       
       if (savedState.gameStatus !== 'playing') {
         setShowResult(true);
+      } else {
+        toast.info('Welcome back! Game restored 🎮');
       }
     } else {
       // Start fresh game
       clearGameState();
+      toast.info(`🎯 ClueLux #${challenge.gameNumber} - Let's play!`);
     }
   }, []);
 
@@ -229,7 +232,11 @@ export default function App() {
     const text = `ClueLux #${challenge.gameNumber}\n${gameStatus === 'won' ? guesses.length : 'X'}/${MAX_GUESSES}\n${emoji}\n\nPlay at cluelux.com`;
     
     navigator.clipboard.writeText(text).then(() => {
-      toast.success('Copied to clipboard!');
+      toast.success('✨ Results copied to clipboard!', {
+        description: 'Share your score with friends!'
+      });
+    }).catch(() => {
+      toast.error('Failed to copy to clipboard');
     });
   };
 

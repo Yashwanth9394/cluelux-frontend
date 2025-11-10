@@ -37,14 +37,27 @@ export function GameTile({ letter, state, position, delay = 0 }: GameTileProps) 
 
   return (
     <motion.div
-      className={`w-16 h-16 border-2 ${getBorderColor()} ${getBackgroundColor()} ${getTextColor()} flex items-center justify-center uppercase rounded-xl shadow-sm`}
-      initial={shouldAnimate ? { scale: 0.8, opacity: 0 } : false}
-      animate={shouldAnimate ? { scale: 1, opacity: 1 } : { scale: letter ? [1, 1.05, 1] : 1 }}
+      className={`w-16 h-16 border-2 ${getBorderColor()} ${getBackgroundColor()} ${getTextColor()} flex items-center justify-center uppercase rounded-xl shadow-md font-bold text-2xl`}
+      initial={shouldAnimate ? { scale: 0.8, opacity: 0, rotateY: 0 } : false}
+      animate={shouldAnimate ? { 
+        scale: [0.8, 1.05, 1], 
+        opacity: 1,
+        rotateY: [0, 180, 360]
+      } : { 
+        scale: letter ? [1, 1.1, 1] : 1 
+      }}
       transition={
         shouldAnimate
-          ? { duration: 0.3, delay: delay * 0.1, type: "spring", stiffness: 200 }
-          : { duration: 0.1 }
+          ? { 
+              duration: 0.6, 
+              delay: delay * 0.15, 
+              type: "spring", 
+              stiffness: 200,
+              damping: 15
+            }
+          : { duration: 0.15, type: "spring" }
       }
+      whileHover={!shouldAnimate && letter ? { scale: 1.05 } : {}}
     >
       {letter}
     </motion.div>

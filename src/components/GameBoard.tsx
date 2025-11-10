@@ -77,15 +77,15 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
             {/* Light bulb on the left */}
             <button 
               onClick={() => handleHintClick(rowIndex)}
-              className={`flex-shrink-0 p-1 rounded-full transition-colors ${
+              className={`flex-shrink-0 p-1 rounded-full transition-all duration-200 ${
                 isLocked 
                   ? 'opacity-30 cursor-not-allowed' 
-                  : 'hover:bg-yellow-50 cursor-pointer'
+                  : 'hover:bg-yellow-50 hover:scale-110 cursor-pointer active:scale-95'
               }`}
               aria-label={isLocked ? `Hint ${rowIndex + 1} locked` : `Show hint ${rowIndex + 1}`}
               disabled={isLocked}
             >
-              <LightbulbIcon className={`h-6 w-6 ${isLocked ? 'text-gray-400' : 'text-yellow-500'}`} />
+              <LightbulbIcon className={`h-6 w-6 transition-all ${isLocked ? 'text-gray-400' : 'text-yellow-500 hover:text-yellow-600'}`} />
             </button>
             
             {/* Game tiles */}
@@ -106,15 +106,17 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
       
       {/* Popup overlay */}
       {showPopup !== null && hints[showPopup] && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
           <div 
             ref={popupRef}
-            className="bg-white rounded-lg shadow-2xl p-6 max-w-md mx-4 transform transition-all animate-in fade-in zoom-in duration-200"
+            className="bg-white rounded-xl shadow-2xl p-6 max-w-md mx-4 transform transition-all animate-in fade-in zoom-in slide-in-from-top-4 duration-300"
           >
             <div className="flex items-start gap-3">
-              <LightbulbIcon className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-1" />
+              <LightbulbIcon className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-1 animate-pulse" />
               <div>
-                <h3 className="font-semibold text-lg mb-2">Hint {showPopup + 1}</h3>
+                <h3 className="font-semibold text-lg mb-2 bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
+                  Hint {showPopup + 1}
+                </h3>
                 <p className="text-gray-700 leading-relaxed">
                   {hints[showPopup]?.text || 'No hint available'}
                 </p>
