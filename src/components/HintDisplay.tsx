@@ -36,7 +36,7 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
             💡 Hints
           </h3>
           <span className="text-sm text-gray-600">
-            {revealedCount}/{hints.length} revealed · {unlockedCount} unlocked
+            {unlockedCount} unlocked
           </span>
         </div>
         {isExpanded ? (

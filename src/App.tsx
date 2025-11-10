@@ -295,11 +295,9 @@ export default function App() {
         </div>
 
         {/* Hints */}
-        {guesses.length > 0 && (
-          <div className="mb-6">
-            <HintDisplay hints={hintStates} onRevealHint={handleRevealHint} />
-          </div>
-        )}
+        <div className="mb-6">
+          <HintDisplay hints={hintStates} onRevealHint={handleRevealHint} />
+        </div>
 
         {/* Keyboard */}
         <Keyboard
