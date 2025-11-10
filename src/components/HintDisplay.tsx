@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lock, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -13,6 +13,17 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const revealedCount = hints.filter(h => h.revealed).length;
   const unlockedCount = hints.filter(h => h.unlocked).length;
+
+  // Auto-reveal all unlocked hints when dropdown expands
+  useEffect(() => {
+    if (isExpanded) {
+      hints.forEach((hint) => {
+        if (hint.unlocked && !hint.revealed) {
+          onRevealHint(hint.index);
+        }
+      });
+    }
+  }, [isExpanded, hints, onRevealHint]);
 
   return (
     <div className="w-full max-w-2xl mx-auto mb-6">
@@ -44,22 +55,14 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
                 hint.revealed
                   ? 'bg-blue-50 border-blue-300 shadow-sm'
                   : hint.unlocked
-                  ? 'bg-yellow-50 border-yellow-200 hover:border-yellow-300 hover:shadow-md cursor-pointer'
+                  ? 'bg-yellow-50 border-yellow-200'
                   : 'bg-gray-100 border-gray-200 opacity-60'
               }`}
-              onClick={() => hint.unlocked && !hint.revealed && onRevealHint(hint.index)}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   {hint.revealed ? (
                     <p className="text-sm text-gray-800 leading-relaxed">{hint.text}</p>
-                  ) : hint.unlocked ? (
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                      <p className="text-sm text-gray-600 italic">
-                        Click to reveal hint {hint.index + 1}
-                      </p>
-                    </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Lock className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -72,12 +75,6 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
               </div>
             </Card>
           ))}
-
-          {unlockedCount > revealedCount && (
-            <p className="text-xs text-center text-gray-500 mt-3">
-              💡 You have {unlockedCount - revealedCount} hint{unlockedCount - revealedCount !== 1 ? 's' : ''} available to reveal
-            </p>
-          )}
         </div>
       )}
     </div>
