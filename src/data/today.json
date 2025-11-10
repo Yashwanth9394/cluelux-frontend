@@ -1,0 +1,21 @@
+{
+  "date": "2025-11-03",
+  "gameNumber": 307,
+  "wordLength": 5,
+  "answer": "OCEAN",
+  "answerLower": "ocean",
+  "hints": [
+    "🌊 Covers most of our planet's surface",
+    "🐠 Home to countless marine creatures",
+    "⛵ Sailors navigate its vast expanse",
+    "💙 Rhymes with 'motion', sounds like 'potion'",
+    "🔤 5 letters: starts with 'O', ends with 'N'",
+    "🧂 Contains saltwater and tides"
+  ],
+  "validWords": [],
+  "metadata": {
+    "difficulty": "easy",
+    "category": "nature",
+    "generatedAt": "2025-11-03T00:00:00Z"
+  }
+}

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "word": "bread",
+    "length": 5,
+    "difficulty": "easy",
+    "category": "food",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "word": "table",
+    "length": 5,
+    "difficulty": "easy",
+    "category": "furniture",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440003",
+    "word": "cloud",
+    "length": 5,
+    "difficulty": "easy",
+    "category": "nature",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440004",
+    "word": "dance",
+    "length": 5,
+    "difficulty": "easy",
+    "category": "action",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440005",
+    "word": "ocean",
+    "length": 5,
+    "difficulty": "easy",
+    "category": "nature",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440006",
+    "word": "light",
+    "length": 5,
+    "difficulty": "medium",
+    "category": "abstract",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440007",
+    "word": "bridge",
+    "length": 6,
+    "difficulty": "medium",
+    "category": "structure",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440008",
+    "word": "garden",
+    "length": 6,
+    "difficulty": "easy",
+    "category": "nature",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440009",
+    "word": "castle",
+    "length": 6,
+    "difficulty": "easy",
+    "category": "building",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "word": "journey",
+    "length": 7,
+    "difficulty": "medium",
+    "category": "action",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440011",
+    "word": "ancient",
+    "length": 7,
+    "difficulty": "medium",
+    "category": "time",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440012",
+    "word": "freedom",
+    "length": 7,
+    "difficulty": "medium",
+    "category": "abstract",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440013",
+    "word": "mountain",
+    "length": 8,
+    "difficulty": "easy",
+    "category": "nature",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440014",
+    "word": "treasure",
+    "length": 8,
+    "difficulty": "medium",
+    "category": "object",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440015",
+    "word": "elephant",
+    "length": 8,
+    "difficulty": "easy",
+    "category": "animal",
+    "used": false,
+    "lastUsed": null,
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+]

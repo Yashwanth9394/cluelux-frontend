@@ -1,0 +1,338 @@
+import { useState, useEffect } from 'react';
+import { GameBoard } from './components/GameBoard';
+import { Keyboard } from './components/Keyboard';
+import { Button } from './components/ui/button';
+import { Alert, AlertDescription } from './components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './components/ui/dialog';
+import { Toaster } from './components/ui/sonner';
+import { getRandomAnswer, isValidWord } from './utils/wordList';
+import { RotateCcw, Trophy, XCircle, HelpCircle, Share2 } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
+
+type TileState = 'empty' | 'filled' | 'correct' | 'present' | 'absent';
+type KeyState = 'unused' | 'correct' | 'present' | 'absent';
+type GameStatus = 'playing' | 'won' | 'lost';
+
+export default function App() {
+  const [targetWord, setTargetWord] = useState(() => getRandomAnswer());
+  const [guesses, setGuesses] = useState<string[]>([]);
+  const [currentGuess, setCurrentGuess] = useState('');
+  const [evaluations, setEvaluations] = useState<TileState[][]>([]);
+  const [keyStates, setKeyStates] = useState<Record<string, KeyState>>({});
+  const [gameStatus, setGameStatus] = useState<GameStatus>('playing');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showResult, setShowResult] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+
+  const MAX_GUESSES = 6;
+  const WORD_LENGTH = 5;
+  const GAME_NUMBER = Math.floor((Date.now() - new Date('2024-01-01').getTime()) / (1000 * 60 * 60 * 24));
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameStatus !== 'playing') return;
+
+      if (e.key === 'Enter') {
+        handleEnter();
+      } else if (e.key === 'Backspace') {
+        handleBackspace();
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
+        handleKeyPress(e.key.toUpperCase());
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentGuess, guesses, gameStatus]);
+
+  useEffect(() => {
+    if (gameStatus !== 'playing') {
+      setShowResult(true);
+    }
+  }, [gameStatus]);
+
+  const evaluateGuess = (guess: string): TileState[] => {
+    const result: TileState[] = Array(WORD_LENGTH).fill('absent');
+    const targetLetters = targetWord.split('');
+    const guessLetters = guess.split('');
+
+    // First pass: mark correct positions
+    for (let i = 0; i < WORD_LENGTH; i++) {
+      if (guessLetters[i] === targetLetters[i]) {
+        result[i] = 'correct';
+        targetLetters[i] = '';
+        guessLetters[i] = '';
+      }
+    }
+
+    // Second pass: mark present letters
+    for (let i = 0; i < WORD_LENGTH; i++) {
+      if (guessLetters[i] && targetLetters.includes(guessLetters[i])) {
+        result[i] = 'present';
+        targetLetters[targetLetters.indexOf(guessLetters[i])] = '';
+      }
+    }
+
+    return result;
+  };
+
+  const updateKeyStates = (guess: string, evaluation: TileState[]) => {
+    const newKeyStates = { ...keyStates };
+    
+    guess.split('').forEach((letter, index) => {
+      const lowerLetter = letter.toLowerCase();
+      const currentState = newKeyStates[lowerLetter] || 'unused';
+      const newState = evaluation[index];
+
+      // Priority: correct > present > absent
+      if (newState === 'correct') {
+        newKeyStates[lowerLetter] = 'correct';
+      } else if (newState === 'present' && currentState !== 'correct') {
+        newKeyStates[lowerLetter] = 'present';
+      } else if (currentState === 'unused') {
+        newKeyStates[lowerLetter] = 'absent';
+      }
+    });
+
+    setKeyStates(newKeyStates);
+  };
+
+  const handleKeyPress = (key: string) => {
+    if (currentGuess.length < WORD_LENGTH) {
+      setCurrentGuess(currentGuess + key);
+      setErrorMessage('');
+    }
+  };
+
+  const handleBackspace = () => {
+    setCurrentGuess(currentGuess.slice(0, -1));
+    setErrorMessage('');
+  };
+
+  const handleEnter = () => {
+    if (currentGuess.length !== WORD_LENGTH) {
+      setErrorMessage('Not enough letters');
+      return;
+    }
+
+    if (!isValidWord(currentGuess)) {
+      setErrorMessage('Not in word list');
+      return;
+    }
+
+    const evaluation = evaluateGuess(currentGuess);
+    const newGuesses = [...guesses, currentGuess];
+    const newEvaluations = [...evaluations, evaluation];
+
+    setGuesses(newGuesses);
+    setEvaluations(newEvaluations);
+    updateKeyStates(currentGuess, evaluation);
+
+    if (currentGuess === targetWord) {
+      setGameStatus('won');
+    } else if (newGuesses.length >= MAX_GUESSES) {
+      setGameStatus('lost');
+    }
+
+    setCurrentGuess('');
+    setErrorMessage('');
+  };
+
+  const handleNewGame = () => {
+    setTargetWord(getRandomAnswer());
+    setGuesses([]);
+    setCurrentGuess('');
+    setEvaluations([]);
+    setKeyStates({});
+    setGameStatus('playing');
+    setErrorMessage('');
+    setShowResult(false);
+  };
+
+  const generateShareText = () => {
+    const emojiMap = {
+      correct: '🟩',
+      present: '🟧',
+      absent: '⬜',
+    };
+
+    const emojiGrid = evaluations
+      .map((row) => row.map((state) => emojiMap[state as keyof typeof emojiMap]).join(''))
+      .join('\n');
+
+    const score = gameStatus === 'won' ? `${guesses.length}/${MAX_GUESSES}` : 'X/6';
+    
+    return `Word Guess Game #${GAME_NUMBER}\n${score}\n\n${emojiGrid}`;
+  };
+
+  const handleShare = async () => {
+    if (gameStatus === 'playing') {
+      toast.error('Finish the game first!');
+      return;
+    }
+
+    const shareText = generateShareText();
+    
+    try {
+      await navigator.clipboard.writeText(shareText);
+      toast.success('Results copied to clipboard!');
+    } catch (err) {
+      toast.error('Failed to copy results');
+    }
+  };
+
+  return (
+    <>
+      <Toaster position="top-center" />
+      <div className="h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-amber-50 flex flex-col">
+      <header className="border-b bg-white/80 backdrop-blur-sm py-3 px-4 shadow-sm flex-shrink-0">
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowHelp(true)}
+              variant="ghost"
+              size="icon"
+              className="text-teal-700 hover:bg-teal-50 rounded-lg"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </Button>
+          </div>
+          
+          <h1 className="tracking-wide text-teal-700">Word Guess Game</h1>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleShare}
+              variant="ghost"
+              size="icon"
+              className="text-teal-700 hover:bg-teal-50 rounded-lg"
+            >
+              <Share2 className="w-5 h-5" />
+            </Button>
+            <Button
+              onClick={handleNewGame}
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-lg border-teal-200 text-teal-700 hover:bg-teal-50"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span className="hidden sm:inline">New Game</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 flex flex-col items-center justify-between py-4 px-4 gap-4 overflow-hidden min-h-0">
+        <div className="w-full max-w-lg flex-shrink-0">
+          {errorMessage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+
+          <GameBoard
+            guesses={guesses}
+            currentGuess={currentGuess}
+            evaluations={evaluations}
+            maxGuesses={MAX_GUESSES}
+          />
+        </div>
+
+        <div className="w-full flex-shrink-0 pb-2">
+          <Keyboard
+            onKeyPress={handleKeyPress}
+            onBackspace={handleBackspace}
+            onEnter={handleEnter}
+            keyStates={keyStates}
+          />
+        </div>
+      </main>
+
+      <Dialog open={showResult} onOpenChange={setShowResult}>
+        <DialogContent className="rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {gameStatus === 'won' ? (
+                <>
+                  <Trophy className="w-6 h-6 text-emerald-500" />
+                  Congratulations!
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-6 h-6 text-amber-500" />
+                  Game Over
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription className="space-y-4 pt-4">
+              {gameStatus === 'won' ? (
+                <p>
+                  You guessed the word in {guesses.length} {guesses.length === 1 ? 'try' : 'tries'}!
+                </p>
+              ) : (
+                <p>
+                  The word was: <span className="uppercase">{targetWord}</span>
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button onClick={handleShare} variant="outline" className="flex-1 gap-2 rounded-lg border-teal-200 text-teal-700 hover:bg-teal-50">
+                  <Share2 className="w-4 h-4" />
+                  Share
+                </Button>
+                <Button onClick={handleNewGame} className="flex-1 bg-teal-600 hover:bg-teal-700 rounded-lg">
+                  Play Again
+                </Button>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="rounded-xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="w-6 h-6 text-teal-600" />
+              How to Play
+            </DialogTitle>
+            <DialogDescription className="space-y-4 pt-4 text-left">
+              <p>Guess the 5-letter word in 6 tries.</p>
+              
+              <div className="space-y-2">
+                <p className="text-gray-700">After each guess, the tiles will change color to show how close your guess was:</p>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center text-white">
+                      W
+                    </div>
+                    <span className="text-sm text-gray-600">Letter is in the word and in the correct spot</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center text-white">
+                      O
+                    </div>
+                    <span className="text-sm text-gray-600">Letter is in the word but in the wrong spot</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-400 to-slate-500 rounded-lg flex items-center justify-center text-white">
+                      R
+                    </div>
+                    <span className="text-sm text-gray-600">Letter is not in the word</span>
+                  </div>
+                </div>
+              </div>
+              
+              <Button onClick={() => setShowHelp(false)} className="w-full bg-teal-600 hover:bg-teal-700 rounded-lg">
+                Got it!
+              </Button>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+      </div>
+    </>
+  );
+}
