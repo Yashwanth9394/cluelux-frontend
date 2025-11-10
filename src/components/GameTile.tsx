@@ -11,7 +11,7 @@ interface GameTileProps {
 
 export function GameTile({ letter, state, position, delay = 0 }: GameTileProps) {
   const getBorderColor = () => {
-    if (state === 'filled') return 'border-indigo-300';
+    if (state === 'filled') return 'border-indigo-400';
     if (state === 'empty') return 'border-gray-300';
     return 'border-transparent';
   };
@@ -21,11 +21,26 @@ export function GameTile({ letter, state, position, delay = 0 }: GameTileProps) 
       case 'correct':
         return 'bg-gradient-to-br from-emerald-500 to-teal-600';
       case 'present':
-        return 'bg-gradient-to-br from-amber-500 to-orange-600';
+        return 'bg-gradient-to-br from-amber-500 to-orange-500';
       case 'absent':
         return 'bg-gradient-to-br from-slate-400 to-slate-500';
       default:
         return 'bg-white';
+    }
+  };
+
+  const getShadow = () => {
+    switch (state) {
+      case 'correct':
+        return 'shadow-lg shadow-emerald-500/50';
+      case 'present':
+        return 'shadow-lg shadow-amber-500/50';
+      case 'absent':
+        return 'shadow-sm';
+      case 'filled':
+        return 'shadow-lg shadow-indigo-500/30';
+      default:
+        return 'shadow-md';
     }
   };
 
@@ -37,29 +52,51 @@ export function GameTile({ letter, state, position, delay = 0 }: GameTileProps) 
 
   return (
     <motion.div
-      className={`w-16 h-16 border-2 ${getBorderColor()} ${getBackgroundColor()} ${getTextColor()} flex items-center justify-center uppercase rounded-xl shadow-md font-bold text-2xl`}
-      initial={shouldAnimate ? { scale: 0.8, opacity: 0, rotateY: 0 } : false}
+      className={`
+        w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem]
+        border-2 ${getBorderColor()} 
+        ${getBackgroundColor()} 
+        ${getTextColor()} 
+        ${getShadow()}
+        flex items-center justify-center 
+        uppercase rounded-xl 
+        font-extrabold text-2xl sm:text-3xl
+        transition-colors
+        transform-gpu
+      `}
+      initial={shouldAnimate ? { scale: 0.8, opacity: 0, rotateY: -90 } : false}
       animate={shouldAnimate ? { 
-        scale: [0.8, 1.05, 1], 
+        scale: [0.8, 1.08, 1], 
         opacity: 1,
         rotateY: [0, 180, 360]
       } : { 
-        scale: letter ? [1, 1.1, 1] : 1 
+        scale: letter ? [1, 1.15, 1] : 1 
       }}
       transition={
         shouldAnimate
           ? { 
-              duration: 0.6, 
-              delay: delay * 0.15, 
+              duration: 0.7, 
+              delay: delay * 0.12, 
               type: "spring", 
-              stiffness: 200,
-              damping: 15
+              stiffness: 260,
+              damping: 18
             }
-          : { duration: 0.15, type: "spring" }
+          : { duration: 0.2, type: "spring", stiffness: 400, damping: 20 }
       }
-      whileHover={!shouldAnimate && letter ? { scale: 1.05 } : {}}
+      whileHover={!shouldAnimate && letter ? { scale: 1.08, y: -2 } : {}}
+      style={{ 
+        willChange: 'transform',
+        backfaceVisibility: 'hidden'
+      }}
     >
-      {letter}
+      <motion.span
+        animate={letter && !shouldAnimate ? { 
+          scale: [1, 1.2, 1]
+        } : {}}
+        transition={{ duration: 0.2 }}
+      >
+        {letter}
+      </motion.span>
     </motion.div>
   );
 }

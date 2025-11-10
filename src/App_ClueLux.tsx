@@ -119,8 +119,13 @@ export default function App() {
     
     if (!validation.valid) {
       setErrorMessage(validation.error || 'Invalid guess');
-      toast.error(validation.error || 'Invalid guess');
-      setTimeout(() => setErrorMessage(''), 3000);
+      // Enhanced error feedback with shake animation hint
+      toast.error(validation.error || 'Invalid guess', {
+        icon: '❌',
+        duration: 2000,
+      });
+      // Trigger shake animation by briefly setting and clearing error
+      setTimeout(() => setErrorMessage(''), 2500);
       return;
     }
 
@@ -157,7 +162,17 @@ export default function App() {
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
       
-      toast.success('🎉 Congratulations! You won!');
+      // Victory message based on performance
+      const victoryMessages = [
+        '🎯 INCREDIBLE! First try!',
+        '⚡ GENIUS! Two guesses!',
+        '🧠 BRILLIANT! Three guesses!',
+        '🎉 AMAZING! You got it!',
+        '👏 WELL DONE! Victory!',
+        '🌟 NICE WORK! You won!',
+      ];
+      const message = victoryMessages[Math.min(newGuesses.length - 1, victoryMessages.length - 1)];
+      toast.success(message, { duration: 4000 });
       return;
     }
 
@@ -165,6 +180,13 @@ export default function App() {
     const newWrongAttempts = wrongAttempts + 1;
     setWrongAttempts(newWrongAttempts);
     const newHintStates = updateHintStates(hintStates, newWrongAttempts, challenge.wordLength);
+    
+    // Check if new hint unlocked
+    const newlyUnlocked = newHintStates.filter((h, i) => h.unlocked && !hintStates[i].unlocked);
+    if (newlyUnlocked.length > 0) {
+      toast.info('💡 New hint unlocked!', { duration: 2000 });
+    }
+    
     setHintStates(newHintStates);
 
     // Check lose condition
@@ -187,7 +209,10 @@ export default function App() {
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
       
-      toast.error(`Game over! The word was ${challenge.answer}`);
+      toast.error(`The word was: ${challenge.answer.toUpperCase()}`, { 
+        icon: '💭',
+        duration: 4000 
+      });
       return;
     }
 
@@ -240,59 +265,80 @@ export default function App() {
   const stats = loadStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex flex-col">
       <Toaster />
       
-      {/* Header */}
-      <header className="border-b bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            🧩 ClueLux
-          </h1>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setShowHelp(true)}>
-              <HelpCircle className="h-5 w-5" />
+      {/* Enhanced Header with subtle appearance */}
+      <header className="border-b bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              ClueLux
+            </h1>
+            {stats.currentStreak > 0 && (
+              <div className="hidden sm:flex items-center gap-1 text-sm font-semibold text-gray-600">
+                <span className="text-orange-500">🔥</span>
+                <span>{stats.currentStreak}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowHelp(true)}
+              className="hover:bg-purple-50 transition-colors"
+            >
+              <HelpCircle className="h-5 w-5 text-gray-600" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setShowStats(true)}>
-              <Trophy className="h-5 w-5" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowStats(true)}
+              className="hover:bg-purple-50 transition-colors"
+            >
+              <Trophy className="h-5 w-5 text-gray-600" />
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
-        {/* Game Info */}
-        <div className="text-center mb-6">
-          <p className="text-sm text-gray-600">
-            Game #{challenge.gameNumber} · {challenge.wordLength} letters · {guesses.length}/{MAX_GUESSES} attempts
+      {/* Main Content - Better spacing and hierarchy */}
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 sm:py-12">
+        {/* Game Info - More subtle */}
+        <div className="text-center mb-8 space-y-1">
+          <p className="text-sm sm:text-base font-medium text-gray-700">
+            Game #{challenge.gameNumber}
           </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {challenge.metadata.category} · {challenge.metadata.difficulty}
+          <p className="text-xs text-gray-500">
+            {challenge.wordLength} letters · {guesses.length}/{MAX_GUESSES} attempts · {challenge.metadata.difficulty}
           </p>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message with animation */}
         {errorMessage && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
+          <div className="mb-6 animate-in slide-in-from-top-2 fade-in duration-300">
+            <Alert variant="destructive" className="max-w-md mx-auto shadow-lg">
+              <AlertDescription className="font-medium">{errorMessage}</AlertDescription>
+            </Alert>
+          </div>
         )}
 
-        {/* Game Board */}
-        <div className="mb-6">
+        {/* Game Board - HERO ELEMENT with more prominence */}
+        <div className="mb-8 sm:mb-12">
           <GameBoard
             guesses={guesses}
             currentGuess={currentGuess}
             evaluations={evaluations}
             maxGuesses={MAX_GUESSES}
             wordLength={challenge.wordLength}
+            hints={hintStates}
           />
         </div>
 
-        {/* Hints */}
+        {/* Hints - Collapsible and less prominent */}
         {guesses.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-8">
             <HintDisplay hints={hintStates} onRevealHint={handleRevealHint} />
           </div>
         )}
@@ -307,42 +353,76 @@ export default function App() {
         />
       </main>
 
-      {/* Result Dialog */}
+      {/* Enhanced Result Dialog with celebrations */}
       <Dialog open={showResult} onOpenChange={setShowResult}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center">
               {gameStatus === 'won' ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Trophy className="h-12 w-12 text-yellow-500" />
-                  <span className="text-2xl">Congratulations!</span>
+                <div className="flex flex-col items-center gap-3 py-4">
+                  <div className="relative">
+                    <Trophy className="h-16 w-16 text-yellow-500 animate-bounce" />
+                    <div className="absolute -top-2 -right-2 text-2xl animate-ping">✨</div>
+                  </div>
+                  <div>
+                    <span className="text-3xl font-extrabold bg-gradient-to-r from-yellow-600 via-orange-500 to-pink-600 bg-clip-text text-transparent">
+                      {guesses.length === 1 ? '🎯 PERFECT!' : 
+                       guesses.length <= 3 ? '⚡ GENIUS!' :
+                       getRevealedHintsCount(hintStates) === 0 ? '🧠 NO HINTS!' :
+                       '🎉 VICTORY!'}
+                    </span>
+                  </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <XCircle className="h-12 w-12 text-red-500" />
-                  <span className="text-2xl">Game Over</span>
+                <div className="flex flex-col items-center gap-3 py-4">
+                  <XCircle className="h-16 w-16 text-red-500" />
+                  <span className="text-2xl font-bold text-gray-800">Next Time!</span>
                 </div>
               )}
             </DialogTitle>
-            <DialogDescription className="space-y-4">
-              <div className="text-center">
-                <p className="text-lg mb-2">
+            <DialogDescription className="space-y-6">
+              <div className="text-center space-y-2">
+                <p className="text-lg font-semibold text-gray-900">
                   {gameStatus === 'won' 
-                    ? `You guessed the word in ${guesses.length} ${guesses.length === 1 ? 'attempt' : 'attempts'}!`
-                    : `The word was: ${challenge.answer}`
+                    ? `Solved in ${guesses.length}/${MAX_GUESSES} attempts`
+                    : `The word was: ${challenge.answer.toUpperCase()}`
                   }
                 </p>
-                <p className="text-sm text-gray-600">
-                  {getRevealedHintsCount(hintStates)} hint{getRevealedHintsCount(hintStates) !== 1 ? 's' : ''} revealed
-                </p>
+                {gameStatus === 'won' && (
+                  <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <span className="text-amber-500">💡</span>
+                      {getRevealedHintsCount(hintStates)} hints used
+                    </span>
+                    {stats.currentStreak > 0 && (
+                      <span className="flex items-center gap-1">
+                        <span className="text-orange-500">🔥</span>
+                        {stats.currentStreak} day streak
+                      </span>
+                    )}
+                  </div>
+                )}
+                {gameStatus === 'lost' && (
+                  <p className="text-sm text-gray-600">
+                    You found {guesses.length > 0 ? 'some' : 'no'} letters. Keep practicing!
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
-                <Button onClick={handleShare} className="w-full">
+                <Button 
+                  onClick={handleShare} 
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
+                  size="lg"
+                >
                   <Share2 className="h-4 w-4 mr-2" />
                   Share Result
                 </Button>
-                <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
+                <Button 
+                  onClick={() => setShowStats(true)} 
+                  variant="outline" 
+                  className="w-full border-2 hover:bg-purple-50"
+                >
                   <Trophy className="h-4 w-4 mr-2" />
                   View Stats
                 </Button>
@@ -389,37 +469,66 @@ export default function App() {
         </DialogContent>
       </Dialog>
 
-      {/* Stats Dialog */}
+      {/* Enhanced Stats Dialog */}
       <Dialog open={showStats} onOpenChange={setShowStats}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Your Statistics</DialogTitle>
-            <DialogDescription className="space-y-4">
+            <DialogTitle className="text-2xl font-bold text-center bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Your Statistics
+            </DialogTitle>
+            <DialogDescription className="space-y-6">
+              {/* Primary Stats - Visual Hierarchy */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold">{stats.totalGames}</div>
-                  <div className="text-xs text-gray-600">Games Played</div>
+                <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                  <div className="text-4xl font-extrabold text-gray-900">{stats.totalGames}</div>
+                  <div className="text-xs uppercase tracking-wide text-gray-600 font-semibold mt-2">Games Played</div>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold">
+                <div className="text-center p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
+                  <div className="text-4xl font-extrabold text-gray-900">
                     {stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0}%
                   </div>
-                  <div className="text-xs text-gray-600">Win Rate</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold">{stats.currentStreak}</div>
-                  <div className="text-xs text-gray-600">Current Streak</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold">{stats.maxStreak}</div>
-                  <div className="text-xs text-gray-600">Max Streak</div>
+                  <div className="text-xs uppercase tracking-wide text-gray-600 font-semibold mt-2">Win Rate</div>
                 </div>
               </div>
 
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold">{stats.avgHintsPerGame.toFixed(1)}</div>
-                <div className="text-xs text-gray-600">Average Hints Used</div>
+              {/* Streak Stats - Highlighted */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-5 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border-2 border-orange-200">
+                  <div className="text-xs uppercase tracking-wide text-gray-600 font-semibold mb-2">Current Streak</div>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-3xl">🔥</span>
+                    <span className="text-3xl font-extrabold text-orange-600">{stats.currentStreak}</span>
+                  </div>
+                </div>
+                <div className="text-center p-5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                  <div className="text-xs uppercase tracking-wide text-gray-600 font-semibold mb-2">Best Streak</div>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-3xl">🏆</span>
+                    <span className="text-3xl font-extrabold text-purple-600">{stats.maxStreak}</span>
+                  </div>
+                </div>
               </div>
+
+              {/* Additional Stat */}
+              <div className="text-center p-5 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-200">
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-2xl">💡</span>
+                  <div className="text-left">
+                    <div className="text-2xl font-bold text-gray-900">{stats.avgHintsPerGame.toFixed(1)}</div>
+                    <div className="text-xs text-gray-600">Average Hints Per Game</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Motivational Message */}
+              {stats.currentStreak > 0 && (
+                <div className="text-center text-sm text-gray-600 italic border-t pt-4">
+                  {stats.currentStreak === 1 ? "Great start! Keep going! 💪" :
+                   stats.currentStreak < 7 ? "You're on fire! 🔥" :
+                   stats.currentStreak < 30 ? "Unstoppable! 🚀" :
+                   "LEGENDARY status! 👑"}
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
