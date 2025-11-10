@@ -1,3 +1,4 @@
+import { memo, useMemo, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Delete } from 'lucide-react';
@@ -18,8 +19,9 @@ const KEYBOARD_ROWS = [
   ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'BACK'],
 ];
 
-export function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled = false }: KeyboardProps) {
-  const getKeyColor = (key: string) => {
+export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled = false }: KeyboardProps) {
+  // Memoize key color calculation
+  const getKeyColor = useCallback((key: string) => {
     const state = keyStates[key.toLowerCase()];
     switch (state) {
       case 'correct':
@@ -31,9 +33,9 @@ export function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled
       default:
         return 'bg-white hover:bg-gray-50 text-gray-800 border-gray-300 hover:shadow-md hover:border-gray-400';
     }
-  };
+  }, [keyStates]);
 
-  const handleClick = (key: string) => {
+  const handleClick = useCallback((key: string) => {
     if (key === 'ENTER') {
       onEnter();
     } else if (key === 'BACK') {
@@ -41,7 +43,7 @@ export function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled
     } else {
       onKeyPress(key);
     }
-  };
+  }, [onEnter, onBackspace, onKeyPress]);
 
   return (
     <div className="flex flex-col gap-2 max-w-lg mx-auto w-full px-2 sm:px-1">
@@ -85,4 +87,4 @@ export function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled
       ))}
     </div>
   );
-}
+});

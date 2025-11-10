@@ -29,21 +29,23 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
     <div className="w-full max-w-2xl mx-auto mb-6">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-center p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors relative"
       >
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
+        <div className="flex flex-col items-center gap-1">
+          <h3 className="text-lg font-semibold">
             💡 Hints
           </h3>
           <span className="text-sm text-gray-600">
             {unlockedCount} unlocked
           </span>
         </div>
-        {isExpanded ? (
-          <ChevronUp className="h-5 w-5 text-gray-500" />
-        ) : (
-          <ChevronDown className="h-5 w-5 text-gray-500" />
-        )}
+        <div className="absolute right-4">
+          {isExpanded ? (
+            <ChevronUp className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          )}
+        </div>
       </button>
       
       {isExpanded && (

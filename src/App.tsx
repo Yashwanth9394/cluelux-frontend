@@ -291,6 +291,7 @@ export default function App() {
             maxGuesses={MAX_GUESSES}
             wordLength={challenge.wordLength}
             hints={hintStates}
+            onRevealHint={handleRevealHint}
           />
         </div>
 
@@ -376,7 +377,7 @@ export default function App() {
               <div>
                 <h4 className="font-semibold mb-2">Hints:</h4>
                 <p className="text-sm">
-                  Get AI-generated hints as you make wrong guesses! Each wrong guess unlocks a new hint that gives you clues about the word.
+                  Get helpful hints as you make wrong guesses! Each wrong guess unlocks a new hint that gives you clues about the word.
                 </p>
               </div>
 
@@ -430,7 +431,7 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t bg-white py-4">
         <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-600">
-          <p>ClueLux · AI-Powered Word Guessing Game · Made with ❤️</p>
+          <p>ClueLux · Word Guessing Game · Made with ❤️</p>
         </div>
       </footer>
     </div>

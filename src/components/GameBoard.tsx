@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { LightbulbIcon } from 'lucide-react';
+import { LightbulbIcon, Lock, CheckCircle2 } from 'lucide-react';
 import { GameTile } from './GameTile';
 import type { HintState } from '../types/game.types';
 
@@ -12,9 +12,10 @@ interface GameBoardProps {
   maxGuesses: number;
   wordLength: number;
   hints: HintState[];
+  onRevealHint?: (index: number) => void;
 }
 
-export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, wordLength, hints }: GameBoardProps) {
+export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, wordLength, hints, onRevealHint }: GameBoardProps) {
   const [showPopup, setShowPopup] = useState<number | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +42,10 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
     const hint = hints[rowIndex];
     // Only show popup if hint is unlocked
     if (hint && hint.unlocked) {
+      // Mark hint as revealed when clicked
+      if (!hint.revealed && onRevealHint) {
+        onRevealHint(rowIndex);
+      }
       setShowPopup(rowIndex);
       setTimeout(() => {
         setShowPopup(null);
@@ -76,27 +81,56 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
           {rows.map((row, rowIndex) => {
             const hint = hints[rowIndex];
             const isLocked = !hint || !hint.unlocked;
+            const isRevealed = hint?.revealed;
+            const isUnlockedNotViewed = hint?.unlocked && !hint?.revealed;
             
             return (
               <div key={rowIndex} className="flex gap-3 justify-center items-center">
-                {/* Enhanced light bulb with animations */}
+                {/* Three-state light bulb indicator */}
                 <button 
                   onClick={() => handleHintClick(rowIndex)}
                   className={`
-                    flex-shrink-0 p-2 rounded-full transition-all duration-200 
+                    relative flex-shrink-0 p-2 rounded-full transition-all duration-300
                     ${isLocked 
-                      ? 'opacity-30 cursor-not-allowed' 
-                      : 'hover:bg-yellow-50 hover:scale-110 cursor-pointer active:scale-95'
+                      ? 'opacity-25 cursor-not-allowed' 
+                      : isUnlockedNotViewed
+                      ? 'hover:bg-yellow-50 hover:scale-110 cursor-pointer active:scale-95'
+                      : 'hover:bg-green-50 hover:scale-105 cursor-pointer active:scale-95'
                     }
                   `}
-                  aria-label={isLocked ? `Hint ${rowIndex + 1} locked` : `Show hint ${rowIndex + 1}`}
+                  aria-label={
+                    isLocked 
+                      ? `Hint ${rowIndex + 1} locked` 
+                      : isRevealed
+                      ? `Hint ${rowIndex + 1} viewed - click to view again`
+                      : `New hint ${rowIndex + 1} available!`
+                  }
                   disabled={isLocked}
                 >
-                  <LightbulbIcon 
-                    className={`h-6 w-6 transition-all ${
-                      isLocked ? 'text-gray-400' : 'text-yellow-500 hover:text-yellow-600'
-                    }`} 
-                  />
+                  {/* State 1: Locked - Gray bulb with lock icon */}
+                  {isLocked && (
+                    <div className="relative">
+                      <LightbulbIcon className="h-6 w-6 text-gray-300" />
+                      <Lock className="h-3 w-3 text-gray-400 absolute -bottom-0.5 -right-0.5" />
+                    </div>
+                  )}
+                  
+                  {/* State 2: Unlocked but not viewed - Glowing yellow bulb */}
+                  {isUnlockedNotViewed && (
+                    <div className="relative">
+                      <LightbulbIcon className="h-6 w-6 text-amber-500 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                      {/* Subtle glow indicator */}
+                      <div className="absolute inset-0 rounded-full bg-amber-400/20" />
+                    </div>
+                  )}
+                  
+                  {/* State 3: Viewed - Green bulb with checkmark */}
+                  {isRevealed && !isLocked && (
+                    <div className="relative">
+                      <LightbulbIcon className="h-6 w-6 text-emerald-500" />
+                      <CheckCircle2 className="h-3 w-3 text-emerald-600 absolute -bottom-0.5 -right-0.5 bg-white rounded-full" />
+                    </div>
+                  )}
                 </button>
                 
                 {/* Game tiles */}

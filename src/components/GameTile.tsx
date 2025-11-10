@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion } from 'motion/react';
 
 type TileState = 'empty' | 'filled' | 'correct' | 'present' | 'absent';
@@ -9,7 +10,7 @@ interface GameTileProps {
   delay?: number;
 }
 
-export function GameTile({ letter, state, position, delay = 0 }: GameTileProps) {
+export const GameTile = memo(function GameTile({ letter, state, position, delay = 0 }: GameTileProps) {
   const getBorderColor = () => {
     if (state === 'filled') return 'border-indigo-400';
     if (state === 'empty') return 'border-gray-300';
@@ -44,6 +45,17 @@ export function GameTile({ letter, state, position, delay = 0 }: GameTileProps) 
     }
   };
 
+  const getInsetShadow = () => {
+    switch (state) {
+      case 'correct':
+      case 'present':
+      case 'absent':
+        return '[box-shadow:inset_0_-2px_0_rgba(0,0,0,0.15)]';
+      default:
+        return '';
+    }
+  };
+
   const getTextColor = () => {
     return state === 'empty' || state === 'filled' ? 'text-gray-800' : 'text-white';
   };
@@ -58,6 +70,7 @@ export function GameTile({ letter, state, position, delay = 0 }: GameTileProps) 
         ${getBackgroundColor()} 
         ${getTextColor()} 
         ${getShadow()}
+        ${getInsetShadow()}
         flex items-center justify-center 
         uppercase rounded-xl 
         font-extrabold text-2xl sm:text-3xl
@@ -99,4 +112,4 @@ export function GameTile({ letter, state, position, delay = 0 }: GameTileProps) 
       </motion.span>
     </motion.div>
   );
-}
+});
