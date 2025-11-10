@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { GameTile } from './GameTile';
+import { Trophy } from 'lucide-react';
 import type { HintState } from '../types/game.types';
 
 type TileState = 'empty' | 'filled' | 'correct' | 'present' | 'absent';
+type GameStatus = 'playing' | 'won' | 'lost';
 
 interface GameBoardProps {
   guesses: string[];
@@ -12,27 +14,40 @@ interface GameBoardProps {
   wordLength: number;
   hints: HintState[];
   onRevealHint?: (index: number) => void;
+  gameStatus?: GameStatus;
+  shakeRow?: number | null; // New prop for shake animation
 }
 
-export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, wordLength, hints, onRevealHint }: GameBoardProps) {
+export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, wordLength, hints, onRevealHint, gameStatus, shakeRow }: GameBoardProps) {
   const [showPopup, setShowPopup] = useState<number | null>(null);
+  const [showTrophy, setShowTrophy] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+
+  // Show trophy animation on victory
+  useEffect(() => {
+    if (gameStatus === 'won') {
+      setTimeout(() => setShowTrophy(true), 300);
+    }
+  }, [gameStatus]);
 
   const rows = Array.from({ length: maxGuesses }, (_, i) => {
     if (i < guesses.length) {
       return {
         letters: guesses[i].split(''),
         states: evaluations[i] || [],
+        isWinningRow: gameStatus === 'won' && i === guesses.length - 1,
       };
     } else if (i === guesses.length) {
       return {
         letters: currentGuess.padEnd(wordLength, ' ').split(''),
         states: Array(wordLength).fill('filled'),
+        isWinningRow: false,
       };
     } else {
       return {
         letters: Array(wordLength).fill(''),
         states: Array(wordLength).fill('empty'),
+        isWinningRow: false,
       };
     }
   });
@@ -72,48 +87,55 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
 
   return (
     <div className="relative">
-      {/* Elevated game board with dramatic shadow */}
-      <div className="absolute inset-0 blur-3xl bg-gradient-to-b from-blue-400/20 via-purple-400/20 to-pink-400/10 -z-10 transform scale-110" />
+      {/* Trophy icon on victory */}
+      {showTrophy && gameStatus === 'won' && (
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-10 animate-trophy-bounce">
+          <Trophy className="w-10 h-10 text-amber-500 drop-shadow-lg" />
+        </div>
+      )}
       
-      <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 border border-gray-100">
+      <div className="rounded-2xl p-2 sm:p-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
         <div className="flex flex-col gap-3">
           {rows.map((row, rowIndex) => {
             const hint = hints[rowIndex];
             const isLocked = !hint || !hint.unlocked;
             const isRevealed = hint?.revealed;
             const isUnlockedNotViewed = hint?.unlocked && !hint?.revealed;
+            const shouldShake = shakeRow === rowIndex;
             
             return (
               <div key={rowIndex} className="flex flex-col gap-1.5">
-                {/* Rectangular indicator light bar on top of each row */}
+                {/* Minimal indicator */}
                 <button 
                   onClick={() => handleHintClick(rowIndex)}
                   className={`
-                    relative h-1.5 rounded-full transition-all duration-300 mx-auto
+                    relative h-1 rounded-full transition-all duration-300 mx-auto
                     ${isLocked 
-                      ? 'w-12 bg-gray-200 opacity-40 cursor-not-allowed' 
+                      ? 'w-2 bg-gray-300 dark:bg-slate-700 opacity-30 cursor-not-allowed' 
                       : isUnlockedNotViewed
-                      ? 'w-16 bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.6)] cursor-pointer hover:shadow-[0_0_16px_rgba(251,191,36,0.8)] hover:w-20 active:scale-95'
-                      : 'w-16 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] cursor-pointer hover:shadow-[0_0_12px_rgba(16,185,129,0.6)] hover:w-20 active:scale-95'
+                      ? 'w-3 bg-amber-500 cursor-pointer hover:w-3.5'
+                      : 'w-3 bg-emerald-500 opacity-50 cursor-pointer hover:w-3.5'
                     }
                   `}
                   aria-label={
                     isLocked 
                       ? `Hint ${rowIndex + 1} locked` 
                       : isRevealed
-                      ? `Hint ${rowIndex + 1} viewed - click to view again`
-                      : `New hint ${rowIndex + 1} available!`
+                      ? `Hint ${rowIndex + 1} viewed`
+                      : `Hint ${rowIndex + 1} available`
                   }
                   disabled={isLocked}
-                >
-                  {/* Animated shimmer effect for unlocked hints */}
-                  {isUnlockedNotViewed && (
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite]" />
-                  )}
-                </button>
+                />
                 
-                {/* Game tiles */}
-                <div className="flex gap-3 sm:gap-2 justify-center">
+                {/* Game tiles with victory glow and shake animation */}
+                <div className={`
+                  flex gap-2 justify-center transition-all
+                  ${row.isWinningRow 
+                    ? 'p-2 rounded-lg bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 dark:from-amber-950/30 dark:via-yellow-950/30 dark:to-amber-950/30 animate-glow-pulse' 
+                    : ''
+                  }
+                  ${shouldShake ? 'animate-shake' : ''}
+                `}>
                   {row.letters.map((letter, colIndex) => (
                     <GameTile
                       key={`${rowIndex}-${colIndex}`}
@@ -130,25 +152,33 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
         </div>
       </div>
       
-      {/* Enhanced popup overlay */}
+      {/* Simple hint popup */}
       {showPopup !== null && hints[showPopup] && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 px-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div 
             ref={popupRef}
-            className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform transition-all animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 max-w-md w-full border border-gray-200 dark:border-slate-800"
           >
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 text-4xl">
+              <div className="text-4xl">
                 💡
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-xl mb-3 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                <h3 className="font-bold text-xl mb-3 text-gray-900 dark:text-white">
                   Hint #{showPopup + 1}
                 </h3>
-                <p className="text-gray-700 text-lg leading-relaxed">
+                <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
                   {hints[showPopup]?.text || 'No hint available'}
                 </p>
               </div>
+            </div>
+            <div className="mt-6 text-center">
+              <button 
+                onClick={() => setShowPopup(null)}
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              >
+                Click anywhere to dismiss
+              </button>
             </div>
           </div>
         </div>

@@ -35,6 +35,7 @@ export default function App() {
   const [showResult, setShowResult] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [shakeRow, setShakeRow] = useState<number | null>(null);
 
   // Hint system
   const [hintStates, setHintStates] = useState<HintState[]>(() => initializeHints(challenge.hints));
@@ -97,9 +98,12 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentGuess, guesses, gameStatus]);
 
-  // Auto-show result when game ends
+  // Auto-show result when game ends (delayed for victory animation)
   useEffect(() => {
-    if (gameStatus !== 'playing') {
+    if (gameStatus === 'won') {
+      // Delay to let trophy animation breathe
+      setTimeout(() => setShowResult(true), 1500);
+    } else if (gameStatus === 'lost') {
       setShowResult(true);
     }
   }, [gameStatus]);
@@ -119,9 +123,17 @@ export default function App() {
     const validation = validateGuessInput(currentGuess, challenge.wordLength);
     
     if (!validation.valid) {
+      // Shake animation for inline feedback
+      const currentRow = guesses.length;
+      setShakeRow(currentRow);
+      setTimeout(() => setShakeRow(null), 500);
+      
       setErrorMessage(validation.error || 'Invalid guess');
-      toast.error(validation.error || 'Invalid guess');
-      setTimeout(() => setErrorMessage(''), 3000);
+      // Still show toast but shake provides immediate visual feedback
+      toast.error(validation.error || 'Invalid guess', {
+        duration: 2000,
+      });
+      setTimeout(() => setErrorMessage(''), 2000);
       return;
     }
 
@@ -141,6 +153,7 @@ export default function App() {
     // Check win condition
     if (isWinningGuess(evaluation)) {
       setGameStatus('won');
+      
       const finalState: GameState = {
         date: challenge.date,
         gameNumber: challenge.gameNumber,
@@ -158,7 +171,10 @@ export default function App() {
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
       
-      toast.success('🎉 Congratulations! You won!');
+      toast.success('🎉 Congratulations! You won!', {
+        description: `Guessed in ${newGuesses.length} ${newGuesses.length === 1 ? 'try' : 'tries'}!`,
+        duration: 4000,
+      });
       return;
     }
 
@@ -243,20 +259,31 @@ export default function App() {
   const stats = loadStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col font-sans">
       <Toaster />
       
-      {/* Header */}
-      <header className="border-b bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            🧩 ClueLux
+      {/* Header - Clean and minimal with 8px grid spacing */}
+      <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+          {/* Hero typography: 48px (6 * 8px) */}
+          <h1 className="text-5xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight" style={{ fontSize: '48px', letterSpacing: '-0.02em', lineHeight: '1.2' }}>
+            ClueLux
           </h1>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setShowHelp(true)}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowHelp(true)}
+              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-11 h-11"
+            >
               <HelpCircle className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setShowStats(true)}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowStats(true)}
+              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-11 h-11"
+            >
               <Trophy className="h-5 w-5" />
             </Button>
           </div>
@@ -264,26 +291,18 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
-        {/* Game Info */}
-        <div className="text-center mb-6">
-          <p className="text-sm text-gray-600">
-            Game #{challenge.gameNumber} · {challenge.wordLength} letters · {guesses.length}/{MAX_GUESSES} attempts
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {challenge.metadata.category} · {challenge.metadata.difficulty}
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-2">
+        {/* Game Info - Minimal, only essential */}
+        <div className="text-center mb-2">
+          <p className="text-gray-500 dark:text-gray-400" style={{ fontSize: '14px', lineHeight: '1.5' }}>
+            {guesses.length}/{MAX_GUESSES} attempts
           </p>
         </div>
 
-        {/* Error Message */}
-        {errorMessage && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
+        {/* Error Message - removed since shake animation provides inline feedback */}
 
         {/* Game Board */}
-        <div className="mb-6">
+        <div className="mb-2">
           <GameBoard
             guesses={guesses}
             currentGuess={currentGuess}
@@ -292,22 +311,26 @@ export default function App() {
             wordLength={challenge.wordLength}
             hints={hintStates}
             onRevealHint={handleRevealHint}
+            gameStatus={gameStatus}
+            shakeRow={shakeRow}
           />
         </div>
 
         {/* Hints */}
-        <div className="mb-6">
+        <div className="mb-2">
           <HintDisplay hints={hintStates} onRevealHint={handleRevealHint} />
         </div>
 
         {/* Keyboard */}
-        <Keyboard
-          onKeyPress={handleKeyPress}
-          onEnter={handleEnter}
-          onBackspace={handleBackspace}
-          keyStates={keyStates}
-          disabled={gameStatus !== 'playing'}
-        />
+        <div className="mt-2">
+          <Keyboard
+            onKeyPress={handleKeyPress}
+            onEnter={handleEnter}
+            onBackspace={handleBackspace}
+            keyStates={keyStates}
+            disabled={gameStatus !== 'playing'}
+          />
+        </div>
       </main>
 
       {/* Result Dialog */}
@@ -428,10 +451,10 @@ export default function App() {
         </DialogContent>
       </Dialog>
 
-      {/* Footer */}
-      <footer className="border-t bg-white py-4">
-        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-600">
-          <p>ClueLux · Word Guessing Game · Made with ❤️</p>
+      {/* Footer - Clean and inspiring with proper spacing */}
+      <footer className="border-t border-gray-200 dark:border-slate-800 py-3 bg-white dark:bg-slate-950">
+        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400" style={{ fontSize: '14px', lineHeight: '1.5' }}>
+          <p>Crafted for word lovers everywhere</p>
         </div>
       </footer>
     </div>

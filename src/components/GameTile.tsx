@@ -20,44 +20,37 @@ export const GameTile = memo(function GameTile({ letter, state, position, delay 
   const getBackgroundColor = () => {
     switch (state) {
       case 'correct':
-        return 'bg-gradient-to-br from-emerald-500 to-teal-600';
+        return 'bg-emerald-500';
       case 'present':
-        return 'bg-gradient-to-br from-amber-500 to-orange-500';
+        return 'bg-amber-500';
       case 'absent':
-        return 'bg-gradient-to-br from-slate-400 to-slate-500';
+        return 'bg-slate-400 dark:bg-slate-600';
+      case 'filled':
+        return 'bg-white dark:bg-slate-800 border-gray-400 dark:border-slate-600';
       default:
-        return 'bg-white';
+        return 'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700';
     }
   };
 
   const getShadow = () => {
     switch (state) {
       case 'correct':
-        return 'shadow-lg shadow-emerald-500/50';
+        return 'shadow-sm';
       case 'present':
-        return 'shadow-lg shadow-amber-500/50';
+        return 'shadow-sm';
       case 'absent':
         return 'shadow-sm';
       case 'filled':
-        return 'shadow-lg shadow-indigo-500/30';
+        return 'shadow-sm border-2';
       default:
-        return 'shadow-md';
-    }
-  };
-
-  const getInsetShadow = () => {
-    switch (state) {
-      case 'correct':
-      case 'present':
-      case 'absent':
-        return '[box-shadow:inset_0_-2px_0_rgba(0,0,0,0.15)]';
-      default:
-        return '';
+        return 'shadow-sm';
     }
   };
 
   const getTextColor = () => {
-    return state === 'empty' || state === 'filled' ? 'text-gray-800' : 'text-white';
+    return state === 'empty' || state === 'filled' 
+      ? 'text-gray-900 dark:text-gray-100' 
+      : 'text-white font-bold';
   };
 
   const shouldAnimate = state === 'correct' || state === 'present' || state === 'absent';
@@ -70,46 +63,36 @@ export const GameTile = memo(function GameTile({ letter, state, position, delay 
         ${getBackgroundColor()} 
         ${getTextColor()} 
         ${getShadow()}
-        ${getInsetShadow()}
         flex items-center justify-center 
-        uppercase rounded-xl 
-        font-extrabold text-2xl sm:text-3xl
-        transition-colors
-        transform-gpu
+        uppercase rounded-lg 
+        font-bold text-2xl sm:text-3xl
+        transition-colors duration-200
       `}
-      initial={shouldAnimate ? { scale: 0.8, opacity: 0, rotateY: -90 } : false}
+      initial={shouldAnimate ? { rotateX: 0 } : false}
       animate={shouldAnimate ? { 
-        scale: [0.8, 1.08, 1], 
-        opacity: 1,
-        rotateY: [0, 180, 360]
+        rotateX: [0, 90, 90, 0],
+        scale: [1, 1.05, 1.05, 1]
       } : { 
-        scale: letter ? [1, 1.15, 1] : 1 
+        scale: letter ? [1, 1.1, 1] : 1 
       }}
       transition={
         shouldAnimate
           ? { 
-              duration: 0.7, 
-              delay: delay * 0.12, 
-              type: "spring", 
-              stiffness: 260,
-              damping: 18
+              duration: 0.6, 
+              delay: delay * 0.15,
+              times: [0, 0.25, 0.5, 1],
+              ease: "easeOut"
             }
-          : { duration: 0.2, type: "spring", stiffness: 400, damping: 20 }
+          : { duration: 0.15, ease: "easeOut" }
       }
-      whileHover={!shouldAnimate && letter ? { scale: 1.08, y: -2 } : {}}
       style={{ 
-        willChange: 'transform',
-        backfaceVisibility: 'hidden'
+        transformStyle: 'preserve-3d',
+        perspective: '1000px'
       }}
     >
-      <motion.span
-        animate={letter && !shouldAnimate ? { 
-          scale: [1, 1.2, 1]
-        } : {}}
-        transition={{ duration: 0.2 }}
-      >
+      <span className="relative z-10">
         {letter}
-      </motion.span>
+      </span>
     </motion.div>
   );
 });
