@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { LightbulbIcon } from 'lucide-react';
 import { GameTile } from './GameTile';
+import type { HintState } from '../types/game.types';
 
 type TileState = 'empty' | 'filled' | 'correct' | 'present' | 'absent';
 
@@ -10,7 +11,7 @@ interface GameBoardProps {
   evaluations: TileState[][];
   maxGuesses: number;
   wordLength: number;
-  hints: string[];
+  hints: HintState[];
 }
 
 export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, wordLength, hints }: GameBoardProps) {
@@ -37,10 +38,14 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
   });
 
   const handleHintClick = (rowIndex: number) => {
-    setShowPopup(rowIndex);
-    setTimeout(() => {
-      setShowPopup(null);
-    }, 3500);
+    const hint = hints[rowIndex];
+    // Only show popup if hint is unlocked
+    if (hint && hint.unlocked) {
+      setShowPopup(rowIndex);
+      setTimeout(() => {
+        setShowPopup(null);
+      }, 3500);
+    }
   };
 
   useEffect(() => {
@@ -63,34 +68,44 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
 
   return (
     <div className="flex flex-col gap-2">
-      {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex gap-2 justify-center items-center">
-          {/* Light bulb on the left */}
-          <button 
-            onClick={() => handleHintClick(rowIndex)}
-            className="flex-shrink-0 p-1 hover:bg-yellow-50 rounded-full transition-colors"
-            aria-label={`Show hint ${rowIndex + 1}`}
-          >
-            <LightbulbIcon className="h-6 w-6 text-yellow-500" />
-          </button>
-          
-          {/* Game tiles */}
-          <div className="flex gap-2">
-            {row.letters.map((letter, colIndex) => (
-              <GameTile
-                key={`${rowIndex}-${colIndex}`}
-                letter={letter.trim()}
-                state={letter.trim() ? row.states[colIndex] : 'empty'}
-                position={colIndex}
-                delay={rowIndex < guesses.length ? colIndex : 0}
-              />
-            ))}
+      {rows.map((row, rowIndex) => {
+        const hint = hints[rowIndex];
+        const isLocked = !hint || !hint.unlocked;
+        
+        return (
+          <div key={rowIndex} className="flex gap-2 justify-center items-center">
+            {/* Light bulb on the left */}
+            <button 
+              onClick={() => handleHintClick(rowIndex)}
+              className={`flex-shrink-0 p-1 rounded-full transition-colors ${
+                isLocked 
+                  ? 'opacity-30 cursor-not-allowed' 
+                  : 'hover:bg-yellow-50 cursor-pointer'
+              }`}
+              aria-label={isLocked ? `Hint ${rowIndex + 1} locked` : `Show hint ${rowIndex + 1}`}
+              disabled={isLocked}
+            >
+              <LightbulbIcon className={`h-6 w-6 ${isLocked ? 'text-gray-400' : 'text-yellow-500'}`} />
+            </button>
+            
+            {/* Game tiles */}
+            <div className="flex gap-2">
+              {row.letters.map((letter, colIndex) => (
+                <GameTile
+                  key={`${rowIndex}-${colIndex}`}
+                  letter={letter.trim()}
+                  state={letter.trim() ? row.states[colIndex] : 'empty'}
+                  position={colIndex}
+                  delay={rowIndex < guesses.length ? colIndex : 0}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       
       {/* Popup overlay */}
-      {showPopup !== null && (
+      {showPopup !== null && hints[showPopup] && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div 
             ref={popupRef}
@@ -101,7 +116,7 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
               <div>
                 <h3 className="font-semibold text-lg mb-2">Hint {showPopup + 1}</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  {hints[showPopup] || 'No hint available'}
+                  {hints[showPopup]?.text || 'No hint available'}
                 </p>
               </div>
             </div>

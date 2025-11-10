@@ -6,27 +6,31 @@ import type { HintState } from '../types/game.types';
 
 /**
  * Get hint unlock schedule for a word length
- * Returns array of attempt numbers when hints unlock
+ * Returns array of guess numbers when hints unlock
+ * First hint (index 0) is unlocked at start
+ * Second hint (index 1) unlocks after 1st guess
+ * Third hint (index 2) unlocks after 2nd guess, etc.
  */
 export function getHintUnlockSchedule(wordLength: number): number[] {
-  const schedules: Record<number, number[]> = {
-    5: [0, 1, 2, 3, 4, 5],
-    6: [0, 1, 2, 3, 4, 5],
-    7: [0, 1, 2, 3, 4, 6],
-    8: [0, 1, 2, 4, 6, 8],
-  };
-  return schedules[wordLength] || [0, 1, 2, 3, 4, 5];
+  // Each hint unlocks after the corresponding guess number
+  // Hint 0: unlocked at start (0 guesses)
+  // Hint 1: unlocked after 1 guess
+  // Hint 2: unlocked after 2 guesses, etc.
+  const maxHints = 6;
+  return Array.from({ length: maxHints }, (_, i) => i);
 }
 
 /**
- * Get number of hints that should be available
+ * Get number of hints that should be unlocked
+ * Based on number of guesses made (not wrong attempts)
  */
 export function getAvailableHintsCount(
-  wrongAttempts: number,
+  guessCount: number,
   wordLength: number
 ): number {
-  const schedule = getHintUnlockSchedule(wordLength);
-  return schedule.filter(attempt => attempt <= wrongAttempts).length;
+  // First hint is unlocked at start
+  // Each subsequent hint unlocks after each guess
+  return Math.min(guessCount + 1, 6);
 }
 
 /**
@@ -53,14 +57,14 @@ export function initializeHints(hints: string[]): HintState[] {
 }
 
 /**
- * Update hint states based on wrong attempts
+ * Update hint states based on number of guesses made
  */
 export function updateHintStates(
   hintStates: HintState[],
-  wrongAttempts: number,
+  guessCount: number,
   wordLength: number
 ): HintState[] {
-  const availableCount = getAvailableHintsCount(wrongAttempts, wordLength);
+  const availableCount = getAvailableHintsCount(guessCount, wordLength);
   
   return hintStates.map((hint, index) => ({
     ...hint,

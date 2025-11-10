@@ -38,7 +38,6 @@ export default function App() {
 
   // Hint system
   const [hintStates, setHintStates] = useState<HintState[]>(() => initializeHints(challenge.hints));
-  const [wrongAttempts, setWrongAttempts] = useState(0);
 
   // Initialize or restore game
   useEffect(() => {
@@ -49,7 +48,6 @@ export default function App() {
       setGuesses(savedState.guesses);
       setEvaluations(savedState.evaluations);
       setGameStatus(savedState.gameStatus);
-      setWrongAttempts(savedState.guesses.length - (savedState.gameStatus === 'won' ? 1 : 0));
       
       // Rebuild keyboard state
       let keys = initializeKeyboardState();
@@ -161,10 +159,8 @@ export default function App() {
       return;
     }
 
-    // Update hints on wrong guess
-    const newWrongAttempts = wrongAttempts + 1;
-    setWrongAttempts(newWrongAttempts);
-    const newHintStates = updateHintStates(hintStates, newWrongAttempts, challenge.wordLength);
+    // Update hints based on guess count (unlock next hint after each guess)
+    const newHintStates = updateHintStates(hintStates, newGuesses.length, challenge.wordLength);
     setHintStates(newHintStates);
 
     // Check lose condition
@@ -287,7 +283,7 @@ export default function App() {
             evaluations={evaluations}
             maxGuesses={MAX_GUESSES}
             wordLength={challenge.wordLength}
-            hints={challenge.hints}
+            hints={hintStates}
           />
         </div>
 
