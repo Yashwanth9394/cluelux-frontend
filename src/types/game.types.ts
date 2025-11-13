@@ -38,6 +38,7 @@ export interface GameState {
   guesses: string[];
   evaluations: TileState[][];
   hintsRevealed: number;
+  hintsUsedPerGuess?: boolean[]; // Track if hint was used before each guess
   gameStatus: GameStatus;
   startTime: number;
   endTime?: number;

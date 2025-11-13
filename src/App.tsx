@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { Keyboard } from './components/Keyboard';
 import { HintDisplay } from './components/HintDisplay';
+import { FirstTimeExperience, shouldShowTutorial } from './components/FirstTimeExperience';
 import { Button } from './components/ui/button';
 import { Alert, AlertDescription } from './components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './components/ui/dialog';
@@ -17,13 +18,23 @@ import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, upd
 // Import types
 import type { TileState, KeyState, GameStatus, GameState, HintState } from './types/game.types';
 
-// Import today's challenge
+// Import personality utilities
+import { getCombinedGreeting, getDiscoveryMessage } from './utils/personality';
+
+// Import API service
+import { fetchDailyWord, formatDailyWordForGame } from './services/api';
+
+// Fallback data in case API is not available
 import todayData from './data/today.json';
 
 export default function App() {
-  // Today's challenge data
-  const challenge = todayData;
+  // Today's challenge data - will be loaded from API
+  const [challenge, setChallenge] = useState(todayData);
+  const [isLoading, setIsLoading] = useState(true);
   const MAX_GUESSES = getMaxAttempts(challenge.wordLength);
+
+  // Tutorial state
+  const [showTutorial, setShowTutorial] = useState(shouldShowTutorial());
 
   // Game state
   const [guesses, setGuesses] = useState<string[]>([]);
@@ -39,9 +50,36 @@ export default function App() {
 
   // Hint system
   const [hintStates, setHintStates] = useState<HintState[]>(() => initializeHints(challenge.hints));
+  const [hintsUsedPerGuess, setHintsUsedPerGuess] = useState<boolean[]>([]);
+
+  // Fetch today's word from backend
+  useEffect(() => {
+    async function loadDailyWord() {
+      try {
+        setIsLoading(true);
+        const data = await fetchDailyWord();
+        const formattedData = formatDailyWordForGame(data);
+        setChallenge(formattedData);
+        setHintStates(initializeHints(formattedData.hints));
+        toast.success('Daily word loaded! 🎯', { duration: 2000 });
+      } catch (error) {
+        console.error('Failed to load daily word:', error);
+        toast.error('Using offline word', {
+          description: 'Could not connect to server',
+          duration: 3000,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadDailyWord();
+  }, []);
 
   // Initialize or restore game
   useEffect(() => {
+    if (isLoading) return; // Wait for word to load
+    
     const savedState = loadGameState();
     
     if (savedState && isCurrentGameToday(challenge.date)) {
@@ -49,6 +87,11 @@ export default function App() {
       setGuesses(savedState.guesses);
       setEvaluations(savedState.evaluations);
       setGameStatus(savedState.gameStatus);
+      
+      // Restore hints used per guess tracking
+      if (savedState.hintsUsedPerGuess) {
+        setHintsUsedPerGuess(savedState.hintsUsedPerGuess);
+      }
       
       // Rebuild keyboard state
       let keys = initializeKeyboardState();
@@ -76,9 +119,13 @@ export default function App() {
     } else {
       // Start fresh game
       clearGameState();
-      toast.info(`🎯 ClueLux #${challenge.gameNumber} - Let's play!`);
+      const greeting = getCombinedGreeting();
+      toast.info(greeting, {
+        description: `ClueLux #${challenge.gameNumber}`,
+        duration: 4000,
+      });
     }
-  }, []);
+  }, [isLoading, challenge]);
 
   // Keyboard input handling
   useEffect(() => {
@@ -142,9 +189,14 @@ export default function App() {
     const newGuesses = [...guesses, currentGuess];
     const newEvaluations = [...evaluations, evaluation];
     
+    // Track if any hint was revealed before this guess
+    const anyHintUsed = hintStates.some(hint => hint.revealed);
+    const newHintsUsedPerGuess = [...hintsUsedPerGuess, anyHintUsed];
+    
     setGuesses(newGuesses);
     setEvaluations(newEvaluations);
     setCurrentGuess('');
+    setHintsUsedPerGuess(newHintsUsedPerGuess);
     
     // Update keyboard
     const newKeyStates = updateKeyboardState(keyStates, currentGuess, evaluation);
@@ -160,6 +212,7 @@ export default function App() {
         guesses: newGuesses,
         evaluations: newEvaluations,
         hintsRevealed: getRevealedHintsCount(hintStates),
+        hintsUsedPerGuess: newHintsUsedPerGuess,
         gameStatus: 'won',
         startTime: Date.now(),
         wordLength: challenge.wordLength,
@@ -191,6 +244,7 @@ export default function App() {
         guesses: newGuesses,
         evaluations: newEvaluations,
         hintsRevealed: getRevealedHintsCount(hintStates),
+        hintsUsedPerGuess: newHintsUsedPerGuess,
         gameStatus: 'lost',
         startTime: Date.now(),
         wordLength: challenge.wordLength,
@@ -202,7 +256,13 @@ export default function App() {
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
       
-      toast.error(`Game over! The word was ${challenge.answer}`);
+      // Use discovery message instead of "game over"
+      const discovery = getDiscoveryMessage(challenge.answer, newGuesses);
+      toast(discovery.title, {
+        description: discovery.message,
+        icon: discovery.emoji,
+        duration: 5000,
+      });
       return;
     }
 
@@ -213,6 +273,7 @@ export default function App() {
       guesses: newGuesses,
       evaluations: newEvaluations,
       hintsRevealed: getRevealedHintsCount(hintStates),
+      hintsUsedPerGuess: newHintsUsedPerGuess,
       gameStatus: 'playing',
       startTime: Date.now(),
       wordLength: challenge.wordLength,
@@ -238,14 +299,19 @@ export default function App() {
   };
 
   const handleShare = () => {
-    const emoji = evaluations.map(row =>
+    const emoji = evaluations.map(row => 
       row.map(state => 
         state === 'correct' ? '🟩' :
         state === 'present' ? '🟨' : '⬜'
       ).join('')
     ).join('\n');
     
-    const text = `ClueLux #${challenge.gameNumber}\n${gameStatus === 'won' ? guesses.length : 'X'}/${MAX_GUESSES}\n${emoji}\n\nPlay at cluelux.com`;
+    // Calculate hints used
+    const totalHintsUsed = getRevealedHintsCount(hintStates);
+    const totalHints = hintStates.length;
+    const hintGlyph = totalHintsUsed > 0 ? ` · ⚡` : '';
+    
+    const text = `ClueLux #${challenge.gameNumber} · ${guesses.length}/${MAX_GUESSES}${hintGlyph}\n${emoji}`;
     
     navigator.clipboard.writeText(text).then(() => {
       toast.success('✨ Results copied to clipboard!', {
@@ -258,10 +324,44 @@ export default function App() {
 
   const stats = loadStats();
 
+  // Show loading screen while fetching daily word
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col font-sans">
+        <Toaster />
+
+        {/* Header */}
+        <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 className="text-5xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight" style={{ fontSize: '48px', letterSpacing: '-0.02em', lineHeight: '1.2' }}>
+              ClueLux
+            </h1>
+          </div>
+        </header>
+
+        {/* Loading State */}
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="relative w-16 h-16 mx-auto">
+              <div className="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Loading today's puzzle...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col font-sans">
       <Toaster />
-      
+
+      {/* First Time Experience Tutorial */}
+      {showTutorial && (
+        <FirstTimeExperience onComplete={() => setShowTutorial(false)} />
+      )}
+
       {/* Header - Clean and minimal with 8px grid spacing */}
       <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -270,17 +370,17 @@ export default function App() {
             ClueLux
           </h1>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowHelp(true)}
               className="hover:bg-gray-100 dark:hover:bg-slate-800 w-11 h-11"
             >
               <HelpCircle className="h-5 w-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowStats(true)}
               className="hover:bg-gray-100 dark:hover:bg-slate-800 w-11 h-11"
             >
@@ -345,8 +445,8 @@ export default function App() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2">
-                  <XCircle className="h-12 w-12 text-red-500" />
-                  <span className="text-2xl">Game Over</span>
+                  <span className="text-4xl">{getDiscoveryMessage(challenge.answer, guesses).emoji}</span>
+                  <span className="text-2xl">{getDiscoveryMessage(challenge.answer, guesses).title}</span>
                 </div>
               )}
             </DialogTitle>
@@ -355,7 +455,7 @@ export default function App() {
                 <p className="text-lg mb-2">
                   {gameStatus === 'won' 
                     ? `You guessed the word in ${guesses.length} ${guesses.length === 1 ? 'attempt' : 'attempts'}!`
-                    : `The word was: ${challenge.answer}`
+                    : getDiscoveryMessage(challenge.answer, guesses).message
                   }
                 </p>
                 <p className="text-sm text-gray-600">
@@ -399,9 +499,14 @@ export default function App() {
 
               <div>
                 <h4 className="font-semibold mb-2">Hints:</h4>
-                <p className="text-sm">
+                <p className="text-sm mb-2">
                   Get helpful hints as you make wrong guesses! Each wrong guess unlocks a new hint that gives you clues about the word.
                 </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Locked hints appear as small gray light bars</li>
+                  <li>🟡 Golden glow = new hint unlocked (click to view)</li>
+                  <li>🔵 Blue bar = hint available (already viewed)</li>
+                </ul>
               </div>
 
               <div>

@@ -51,15 +51,10 @@ export function isWinningGuess(evaluation: TileState[]): boolean {
 
 /**
  * Get maximum attempts allowed for a word length
+ * Always returns 6 attempts regardless of word length
  */
 export function getMaxAttempts(wordLength: number): number {
-  const maxAttemptsMap: Record<number, number> = {
-    5: 6,
-    6: 7,
-    7: 8,
-    8: 9,
-  };
-  return maxAttemptsMap[wordLength] || 6;
+  return 6;
 }
 
 /**

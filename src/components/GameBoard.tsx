@@ -52,15 +52,15 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
     }
   });
 
-  const handleHintClick = (rowIndex: number) => {
-    const hint = hints[rowIndex];
+  const handleHintClick = (hintIndex: number) => {
+    const hint = hints[hintIndex];
     // Only show popup if hint is unlocked
     if (hint && hint.unlocked) {
       // Mark hint as revealed when clicked
       if (!hint.revealed && onRevealHint) {
-        onRevealHint(rowIndex);
+        onRevealHint(hintIndex);
       }
-      setShowPopup(rowIndex);
+      setShowPopup(hintIndex);
       setTimeout(() => {
         setShowPopup(null);
       }, 3500);
@@ -97,35 +97,40 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
       <div className="rounded-2xl p-2 sm:p-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
         <div className="flex flex-col gap-3">
           {rows.map((row, rowIndex) => {
-            const hint = hints[rowIndex];
+            // Skip light bar for first row (rowIndex 0)
+            // Map remaining rows to hints: row 1 -> hint 0, row 2 -> hint 1, etc.
+            const hintIndex = rowIndex - 1;
+            const hint = rowIndex > 0 ? hints[hintIndex] : null;
             const isLocked = !hint || !hint.unlocked;
             const isRevealed = hint?.revealed;
             const isUnlockedNotViewed = hint?.unlocked && !hint?.revealed;
             const shouldShake = shakeRow === rowIndex;
-            
+
             return (
               <div key={rowIndex} className="flex flex-col gap-1.5">
-                {/* Minimal indicator */}
-                <button 
-                  onClick={() => handleHintClick(rowIndex)}
-                  className={`
-                    relative h-1 rounded-full transition-all duration-300 mx-auto
-                    ${isLocked 
-                      ? 'w-2 bg-gray-300 dark:bg-slate-700 opacity-30 cursor-not-allowed' 
-                      : isUnlockedNotViewed
-                      ? 'w-3 bg-amber-500 cursor-pointer hover:w-3.5'
-                      : 'w-3 bg-emerald-500 opacity-50 cursor-pointer hover:w-3.5'
+                {/* Minimal indicator - skip for first row */}
+                {rowIndex > 0 && (
+                  <button
+                    onClick={() => handleHintClick(hintIndex)}
+                    className={`
+                      relative h-1 rounded-full transition-all duration-300 mx-auto
+                      ${isLocked
+                        ? 'w-2 bg-slate-300 dark:bg-slate-700 opacity-20 cursor-not-allowed'
+                        : isUnlockedNotViewed
+                        ? 'w-8 bg-amber-500 cursor-pointer hover:w-9 hover:shadow-[0_0_8px_rgba(251,191,36,0.5)] animate-hint-breathe'
+                        : 'w-3 bg-blue-500 opacity-60 cursor-pointer hover:scale-105 hover:opacity-70 transition-transform'
+                      }
+                    `}
+                    aria-label={
+                      isLocked
+                        ? `Hint ${hintIndex + 1} locked`
+                        : isRevealed
+                        ? `Hint ${hintIndex + 1} viewed`
+                        : `Hint ${hintIndex + 1} available`
                     }
-                  `}
-                  aria-label={
-                    isLocked 
-                      ? `Hint ${rowIndex + 1} locked` 
-                      : isRevealed
-                      ? `Hint ${rowIndex + 1} viewed`
-                      : `Hint ${rowIndex + 1} available`
-                  }
-                  disabled={isLocked}
-                />
+                    disabled={isLocked}
+                  />
+                )}
                 
                 {/* Game tiles with victory glow and shake animation */}
                 <div className={`

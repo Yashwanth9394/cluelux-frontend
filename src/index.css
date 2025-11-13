@@ -9,10 +9,21 @@
     font-size: 16px;
     line-height: 1.5;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     line-height: 1.2;
     letter-spacing: -0.02em;
+  }
+}
+
+/* Glass morphism effects */
+@layer components {
+  .glass-subtle {
+    @apply bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm;
+  }
+
+  .glass-card {
+    @apply bg-white/90 dark:bg-slate-800/90 backdrop-blur-md;
   }
 }
 

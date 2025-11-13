@@ -7,17 +7,17 @@ import type { HintState } from '../types/game.types';
 /**
  * Get hint unlock schedule for a word length
  * Returns array of guess numbers when hints unlock
- * First hint (index 0) is unlocked at start
- * Second hint (index 1) unlocks after 1st guess
- * Third hint (index 2) unlocks after 2nd guess, etc.
+ * First hint (index 0) unlocks after 1st guess
+ * Second hint (index 1) unlocks after 2nd guess
+ * Third hint (index 2) unlocks after 3rd guess, etc.
  */
 export function getHintUnlockSchedule(wordLength: number): number[] {
   // Each hint unlocks after the corresponding guess number
-  // Hint 0: unlocked at start (0 guesses)
-  // Hint 1: unlocked after 1 guess
-  // Hint 2: unlocked after 2 guesses, etc.
-  const maxHints = 6;
-  return Array.from({ length: maxHints }, (_, i) => i);
+  // Hint 0: unlocked after 1 guess
+  // Hint 1: unlocked after 2 guesses
+  // Hint 2: unlocked after 3 guesses, etc.
+  const maxHints = 5;
+  return Array.from({ length: maxHints }, (_, i) => i + 1);
 }
 
 /**
@@ -28,9 +28,9 @@ export function getAvailableHintsCount(
   guessCount: number,
   wordLength: number
 ): number {
-  // First hint is unlocked at start
-  // Each subsequent hint unlocks after each guess
-  return Math.min(guessCount + 1, 6);
+  // Each hint unlocks after each guess
+  // 0 guesses = 0 hints, 1 guess = 1 hint, etc.
+  return Math.min(guessCount, 5);
 }
 
 /**
@@ -51,8 +51,8 @@ export function initializeHints(hints: string[]): HintState[] {
   return hints.map((text, index) => ({
     index,
     text,
-    unlocked: index === 0, // First hint unlocked at start
-    revealed: index === 0, // First hint revealed at start
+    unlocked: false, // No hints unlocked at start
+    revealed: false, // No hints revealed at start
   }));
 }
 

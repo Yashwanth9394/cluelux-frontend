@@ -6,13 +6,14 @@ import { Button } from './components/ui/button';
 import { Alert, AlertDescription } from './components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './components/ui/dialog';
 import { Toaster } from './components/ui/sonner';
-import { RotateCcw, Trophy, XCircle, HelpCircle, Share2 } from 'lucide-react';
+import { RotateCcw, Trophy, XCircle, HelpCircle, Share2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Import our game engines
 import { evaluateGuess, isWinningGuess, getMaxAttempts, updateKeyboardState, initializeKeyboardState, validateGuessInput } from './lib/gameEngine';
 import { initializeHints, updateHintStates, revealHint, getRevealedHintsCount } from './lib/hintManager';
 import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, updateStats, isCurrentGameToday } from './lib/localStorage';
+import { formatTimeUntilNextPuzzle } from './utils/timeUtils';
 
 // Import types
 import type { TileState, KeyState, GameStatus, GameState, HintState } from './types/game.types';
@@ -39,6 +40,9 @@ export default function App() {
   // Hint system
   const [hintStates, setHintStates] = useState<HintState[]>(() => initializeHints(challenge.hints));
   const [wrongAttempts, setWrongAttempts] = useState(0);
+  
+  // Timer for next puzzle
+  const [timeUntilNext, setTimeUntilNext] = useState(formatTimeUntilNextPuzzle());
 
   // Initialize or restore game
   useEffect(() => {
@@ -100,6 +104,17 @@ export default function App() {
   useEffect(() => {
     if (gameStatus !== 'playing') {
       setShowResult(true);
+    }
+  }, [gameStatus]);
+  
+  // Update countdown timer every minute
+  useEffect(() => {
+    if (gameStatus !== 'playing') {
+      const interval = setInterval(() => {
+        setTimeUntilNext(formatTimeUntilNextPuzzle());
+      }, 60000); // Update every minute
+      
+      return () => clearInterval(interval);
     }
   }, [gameStatus]);
 
@@ -427,6 +442,14 @@ export default function App() {
                   <Trophy className="h-4 w-4 mr-2" />
                   View Stats
                 </Button>
+              </div>
+              
+              {/* Countdown to next puzzle */}
+              <div className="text-center pt-4 border-t">
+                <div className="flex items-center justify-center gap-2 text-gray-700">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm font-medium">New puzzle in {timeUntilNext}</span>
+                </div>
               </div>
             </DialogDescription>
           </DialogHeader>
