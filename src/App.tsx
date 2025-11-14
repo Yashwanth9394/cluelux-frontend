@@ -307,30 +307,47 @@ export default function App() {
     window.location.reload();
   };
 
-  const handleShare = () => {
-    const emoji = evaluations.map(row => 
-      row.map(state => 
+  const handleShare = async () => {
+    const emoji = evaluations.map(row =>
+      row.map(state =>
         state === 'correct' ? '🟩' :
         state === 'present' ? '🟨' : '⬜'
       ).join('')
     ).join('\n');
-    
+
     // Calculate hints used
     const totalHintsUsed = getRevealedHintsCount(hintStates);
-    
+
     // Get personalized victory message
     const victory = getVictoryMessage(guesses.length, totalHintsUsed, challenge.answer);
     const hintGlyph = totalHintsUsed === 0 ? ' ⚡' : '';
-    
+
     const text = `ClueLux #${challenge.gameNumber} · ${guesses.length}/${MAX_GUESSES}${hintGlyph}\n\n${emoji}\n\n${victory.shareQuote}`;
-    
-    navigator.clipboard.writeText(text).then(() => {
-      toast.success('✨ Results copied to clipboard!', {
-        description: 'Share your score with friends!'
-      });
-    }).catch(() => {
-      toast.error('Failed to copy to clipboard');
-    });
+
+    // Try native share API first (works on mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          text: text,
+          title: 'ClueLux Results'
+        });
+        // No toast on successful share - native dialog is enough feedback
+        return;
+      } catch (err: any) {
+        // User cancelled or share failed - silently fall back to clipboard
+        if (err.name === 'AbortError') {
+          return; // User cancelled, don't show any error
+        }
+      }
+    }
+
+    // Fallback to clipboard
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard');
+    } catch {
+      toast.error('Failed to copy');
+    }
   };
 
   const stats = loadStats();
