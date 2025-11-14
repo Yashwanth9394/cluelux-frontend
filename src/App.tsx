@@ -423,10 +423,10 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-2 overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-1 overflow-y-auto overflow-x-hidden">
         {/* Game Info - Minimal, only essential */}
-        <div className="text-center mb-2">
-          <p className="text-gray-500 dark:text-gray-400" style={{ fontSize: '14px', lineHeight: '1.5' }}>
+        <div className="text-center mb-1">
+          <p className="text-gray-500 dark:text-gray-400 text-xs">
             {guesses.length}/{MAX_GUESSES} attempts
           </p>
         </div>
@@ -434,7 +434,7 @@ export default function App() {
         {/* Error Message - removed since shake animation provides inline feedback */}
 
         {/* Game Board */}
-        <div className="mb-2">
+        <div className="mb-1">
           <GameBoard
             guesses={guesses}
             currentGuess={currentGuess}
@@ -449,12 +449,10 @@ export default function App() {
         </div>
 
         {/* Hints */}
-        <div className="mb-2">
-          <HintDisplay hints={hintStates} onRevealHint={handleRevealHint} />
-        </div>
+        <HintDisplay hints={hintStates} onRevealHint={handleRevealHint} />
 
         {/* Keyboard */}
-        <div className="mt-2">
+        <div className="mt-1">
           <Keyboard
             onKeyPress={handleKeyPress}
             onEnter={handleEnter}
@@ -610,8 +608,8 @@ export default function App() {
       </Dialog>
 
       {/* Footer - Clean and inspiring with proper spacing */}
-      <footer className="border-t border-gray-200 dark:border-slate-800 py-3 bg-white dark:bg-slate-950">
-        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400" style={{ fontSize: '14px', lineHeight: '1.5' }}>
+      <footer className="border-t border-gray-200 dark:border-slate-800 py-2 bg-white dark:bg-slate-950">
+        <div className="max-w-4xl mx-auto px-4 text-center text-xs text-gray-500 dark:text-gray-400">
           <p>Crafted for word lovers everywhere</p>
         </div>
       </footer>
