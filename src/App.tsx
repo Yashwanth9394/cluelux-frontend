@@ -364,8 +364,8 @@ export default function App() {
 
         {/* Header */}
         <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <h1 className="text-5xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight" style={{ fontSize: '48px', letterSpacing: '-0.02em', lineHeight: '1.2' }}>
+          <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
               ClueLux
             </h1>
           </div>
@@ -396,27 +396,27 @@ export default function App() {
 
       {/* Header - Clean and minimal with 8px grid spacing */}
       <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Hero typography: 48px (6 * 8px) */}
-          <h1 className="text-5xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight" style={{ fontSize: '48px', letterSpacing: '-0.02em', lineHeight: '1.2' }}>
+        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
+          {/* Compact title for mobile */}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
             ClueLux
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowHelp(true)}
-              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-11 h-11"
+              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-9 h-9"
             >
-              <HelpCircle className="h-5 w-5" />
+              <HelpCircle className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowStats(true)}
-              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-11 h-11"
+              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-9 h-9"
             >
-              <Trophy className="h-5 w-5" />
+              <Trophy className="h-4 w-4" />
             </Button>
           </div>
         </div>
