@@ -386,7 +386,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-full bg-white dark:bg-slate-950 flex flex-col font-sans overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col font-sans">
       <Toaster />
 
       {/* First Time Experience Tutorial */}
@@ -423,7 +423,7 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-1 overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-1 overflow-x-hidden">
         {/* Game Info - Minimal, only essential */}
         <div className="text-center mb-1">
           <p className="text-gray-500 dark:text-gray-400 text-xs">
