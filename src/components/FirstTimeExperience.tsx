@@ -155,6 +155,16 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
                 </div>
               </div>
 
+              {/* Hint cost explanation */}
+              <div className="bg-indigo-50 dark:bg-indigo-950/30 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800">
+                <p className="text-sm text-indigo-900 dark:text-indigo-200 font-medium mb-1">
+                  💎 Skill Reward System
+                </p>
+                <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                  Earlier hints are harder. Skipping to hint #4? Counts as using all 4 hints. Use fewer to show skill!
+                </p>
+              </div>
+
               <Button onClick={handleNext} className="w-full" size="lg">
                 Start Playing →
               </Button>

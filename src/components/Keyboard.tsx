@@ -22,13 +22,12 @@ const KEYBOARD_ROWS = [
 export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled = false }: KeyboardProps) {
   // Memoize key color calculation with glassmorphic gradients
   const getKeyColor = useCallback((key: string) => {
-    const state = keyStates[key.toLowerCase()];
+    const state = keyStates[key.toUpperCase()];
     switch (state) {
       case 'correct':
-        return 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700 text-white border-emerald-600/50 shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)]';
       case 'present':
-        return 'bg-gradient-to-br from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:via-amber-700 hover:to-orange-600 text-white border-amber-600/50 shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_6px_30px_rgba(245,158,11,0.6)]';
       case 'absent':
+        // All used letters show as grey
         return 'bg-gradient-to-br from-slate-400 via-slate-500 to-slate-600 hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 text-white border-slate-600/50 opacity-70 hover:opacity-80';
       default:
         return 'glass-subtle hover:glass-card text-gray-800 dark:text-gray-200 border-gray-300/50 dark:border-gray-600/50 hover:border-indigo-400/50 hover:shadow-[0_4px_16px_rgba(99,102,241,0.2)]';
@@ -51,7 +50,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
         <div key={rowIndex} className="flex gap-1.5 sm:gap-2 justify-center">
           {row.map((key) => {
             const isSpecial = key === 'ENTER' || key === 'BACK';
-            const state = keyStates[key.toLowerCase()];
+            const state = keyStates[key.toUpperCase()];
             
             return (
               <motion.div

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { GameTile } from './GameTile';
-import { Trophy } from 'lucide-react';
 import type { HintState } from '../types/game.types';
 
 type TileState = 'empty' | 'filled' | 'correct' | 'present' | 'absent';
@@ -20,15 +19,7 @@ interface GameBoardProps {
 
 export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, wordLength, hints, onRevealHint, gameStatus, shakeRow }: GameBoardProps) {
   const [showPopup, setShowPopup] = useState<number | null>(null);
-  const [showTrophy, setShowTrophy] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
-
-  // Show trophy animation on victory
-  useEffect(() => {
-    if (gameStatus === 'won') {
-      setTimeout(() => setShowTrophy(true), 300);
-    }
-  }, [gameStatus]);
 
   const rows = Array.from({ length: maxGuesses }, (_, i) => {
     if (i < guesses.length) {
@@ -87,13 +78,6 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
 
   return (
     <div className="relative">
-      {/* Trophy icon on victory */}
-      {showTrophy && gameStatus === 'won' && (
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-10 animate-trophy-bounce">
-          <Trophy className="w-10 h-10 text-amber-500 drop-shadow-lg" />
-        </div>
-      )}
-      
       <div className="rounded-2xl p-2 sm:p-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
         <div className="flex flex-col gap-3">
           {rows.map((row, rowIndex) => {
@@ -134,9 +118,9 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
                 
                 {/* Game tiles with victory glow and shake animation */}
                 <div className={`
-                  flex gap-2 justify-center transition-all
+                  flex gap-2 justify-center transition-all duration-500
                   ${row.isWinningRow 
-                    ? 'p-2 rounded-lg bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 dark:from-amber-950/30 dark:via-yellow-950/30 dark:to-amber-950/30 animate-glow-pulse' 
+                    ? 'p-3 rounded-xl bg-gradient-to-r from-amber-50/80 via-yellow-50 to-amber-50/80 dark:from-amber-950/20 dark:via-yellow-950/30 dark:to-amber-950/20 shadow-lg animate-glow-pulse' 
                     : ''
                   }
                   ${shouldShake ? 'animate-shake' : ''}

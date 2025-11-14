@@ -8,6 +8,13 @@ export interface TimePersonality {
   emoji: string;
 }
 
+export interface VictoryMessage {
+  title: string;
+  subtitle: string;
+  emoji: string;
+  shareQuote: string;
+}
+
 export function getTimeOfDayGreeting(): TimePersonality {
   const hour = new Date().getHours();
   
@@ -54,6 +61,74 @@ export function getCombinedGreeting(): string {
   const dayGreeting = getDayOfWeekGreeting();
   
   return `${timeGreeting.emoji} ${timeGreeting.greeting} • ${dayGreeting}`;
+}
+
+/**
+ * Get victory message based on performance
+ * Steve Jobs philosophy: Make them feel like they accomplished something rare
+ */
+export function getVictoryMessage(
+  attempts: number,
+  hintsUsed: number,
+  answer: string
+): VictoryMessage {
+  // Perfect game - 1 attempt
+  if (attempts === 1) {
+    return {
+      title: 'IMPOSSIBLE',
+      subtitle: 'One guess. Pure genius.',
+      emoji: '🎯',
+      shareQuote: `Got ${answer.toUpperCase()} in ONE guess. Yes, really.`
+    };
+  }
+  
+  // Hint-free victory in 2-3 attempts
+  if (attempts <= 3 && hintsUsed === 0) {
+    return {
+      title: 'BRILLIANT',
+      subtitle: 'No hints. All skill.',
+      emoji: '⚡',
+      shareQuote: `Solved ${answer.toUpperCase()} without hints.`
+    };
+  }
+  
+  // Hint-free victory in 4-5 attempts
+  if (attempts <= 5 && hintsUsed === 0) {
+    return {
+      title: 'IMPRESSIVE',
+      subtitle: 'You figured it out yourself.',
+      emoji: '🌟',
+      shareQuote: `Cracked ${answer.toUpperCase()} solo. No hints needed.`
+    };
+  }
+  
+  // Clutch win on last attempt
+  if (attempts === 6) {
+    return {
+      title: 'CLUTCH',
+      subtitle: 'Under pressure, you deliver.',
+      emoji: '🔥',
+      shareQuote: `${answer.toUpperCase()} on the final attempt.`
+    };
+  }
+  
+  // Good performance with hints
+  if (attempts <= 4) {
+    return {
+      title: 'EXCELLENT',
+      subtitle: 'Smart use of clues.',
+      emoji: '✨',
+      shareQuote: `Found ${answer.toUpperCase()} in ${attempts} tries.`
+    };
+  }
+  
+  // Default victory
+  return {
+    title: 'SOLVED',
+    subtitle: 'Another one conquered.',
+    emoji: '🎉',
+    shareQuote: `Today's word: ${answer.toUpperCase()}. Done.`
+  };
 }
 
 /**

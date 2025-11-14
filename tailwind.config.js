@@ -14,8 +14,14 @@ module.exports = {
           '20%, 40%, 60%, 80%': { transform: 'translateX(8px)' },
         },
         'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)' },
-          '50%': { boxShadow: '0 0 40px rgba(251, 191, 36, 0.6)' },
+          '0%, 100%': { 
+            boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)',
+            transform: 'scale(1)'
+          },
+          '50%': { 
+            boxShadow: '0 0 30px rgba(251, 191, 36, 0.5)',
+            transform: 'scale(1.01)'
+          },
         },
         'trophy-bounce': {
           '0%, 100%': { transform: 'translateY(0) scale(1)' },
@@ -29,7 +35,7 @@ module.exports = {
       animation: {
         shimmer: 'shimmer 2s infinite',
         shake: 'shake 0.5s ease-in-out',
-        'glow-pulse': 'glow-pulse 1.5s ease-in-out infinite',
+        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
         'trophy-bounce': 'trophy-bounce 0.6s ease-out',
         'hint-breathe': 'hint-breathe 2.5s ease-in-out infinite',
       },

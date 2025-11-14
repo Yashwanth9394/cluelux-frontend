@@ -19,7 +19,7 @@ import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, upd
 import type { TileState, KeyState, GameStatus, GameState, HintState } from './types/game.types';
 
 // Import personality utilities
-import { getCombinedGreeting, getDiscoveryMessage } from './utils/personality';
+import { getCombinedGreeting, getDiscoveryMessage, getVictoryMessage } from './utils/personality';
 
 // Import API service
 import { fetchDailyWord, formatDailyWordForGame } from './services/api';
@@ -47,6 +47,7 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [shakeRow, setShakeRow] = useState<number | null>(null);
+  const [timeUntilNext, setTimeUntilNext] = useState('');
 
   // Hint system
   const [hintStates, setHintStates] = useState<HintState[]>(() => initializeHints(challenge.hints));
@@ -148,12 +149,42 @@ export default function App() {
   // Auto-show result when game ends (delayed for victory animation)
   useEffect(() => {
     if (gameStatus === 'won') {
-      // Delay to let trophy animation breathe
-      setTimeout(() => setShowResult(true), 1500);
+      // Steve Jobs principle: Let them SAVOR the moment
+      // Don't rush them with dialogs - let them breathe and feel smart
+      // 7 seconds of pure satisfaction before we ask them to do anything
+      setTimeout(() => setShowResult(true), 7000);
     } else if (gameStatus === 'lost') {
       setShowResult(true);
     }
   }, [gameStatus]);
+
+  // Countdown timer for next puzzle
+  useEffect(() => {
+    const calculateTimeUntilMidnightET = () => {
+      const now = new Date();
+      const etDateStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+      const etNow = new Date(etDateStr);
+      const midnightET = new Date(etNow);
+      midnightET.setHours(24, 0, 0, 0);
+
+      const diff = midnightET.getTime() - etNow.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      return `${hours}h ${minutes}m ${seconds}s`;
+    };
+
+    // Update immediately
+    setTimeUntilNext(calculateTimeUntilMidnightET());
+
+    // Update every second
+    const interval = setInterval(() => {
+      setTimeUntilNext(calculateTimeUntilMidnightET());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleKeyPress = (key: string) => {
     if (currentGuess.length < challenge.wordLength) {
@@ -224,10 +255,9 @@ export default function App() {
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
       
-      toast.success('🎉 Congratulations! You won!', {
-        description: `Guessed in ${newGuesses.length} ${newGuesses.length === 1 ? 'try' : 'tries'}!`,
-        duration: 4000,
-      });
+      // Steve Jobs: SILENCE is golden
+      // No toast. No noise. Just let the green tiles speak.
+      // The user KNOWS they won. Don't tell them what they already feel.
       return;
     }
 
@@ -308,10 +338,12 @@ export default function App() {
     
     // Calculate hints used
     const totalHintsUsed = getRevealedHintsCount(hintStates);
-    const totalHints = hintStates.length;
-    const hintGlyph = totalHintsUsed > 0 ? ` · ⚡` : '';
     
-    const text = `ClueLux #${challenge.gameNumber} · ${guesses.length}/${MAX_GUESSES}${hintGlyph}\n${emoji}`;
+    // Get personalized victory message
+    const victory = getVictoryMessage(guesses.length, totalHintsUsed, challenge.answer);
+    const hintGlyph = totalHintsUsed === 0 ? ' ⚡' : '';
+    
+    const text = `ClueLux #${challenge.gameNumber} · ${guesses.length}/${MAX_GUESSES}${hintGlyph}\n\n${emoji}\n\n${victory.shareQuote}`;
     
     navigator.clipboard.writeText(text).then(() => {
       toast.success('✨ Results copied to clipboard!', {
@@ -439,9 +471,10 @@ export default function App() {
           <DialogHeader>
             <DialogTitle className="text-center">
               {gameStatus === 'won' ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Trophy className="h-12 w-12 text-yellow-500" />
-                  <span className="text-2xl">Congratulations!</span>
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <span className="text-6xl">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).emoji}</span>
+                  <span className="text-3xl font-bold tracking-tight">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).title}</span>
+                  <span className="text-base text-gray-600 dark:text-gray-400 font-normal">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).subtitle}</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2">
@@ -450,28 +483,48 @@ export default function App() {
                 </div>
               )}
             </DialogTitle>
-            <DialogDescription className="space-y-4">
-              <div className="text-center">
-                <p className="text-lg mb-2">
-                  {gameStatus === 'won' 
-                    ? `You guessed the word in ${guesses.length} ${guesses.length === 1 ? 'attempt' : 'attempts'}!`
-                    : getDiscoveryMessage(challenge.answer, guesses).message
-                  }
-                </p>
-                <p className="text-sm text-gray-600">
-                  {getRevealedHintsCount(hintStates)} hint{getRevealedHintsCount(hintStates) !== 1 ? 's' : ''} revealed
-                </p>
-              </div>
+            <DialogDescription asChild>
+              <div className="space-y-4">
+                {gameStatus === 'won' ? (
+                  <div className="text-center">
+                    <p className="text-lg mb-1 text-gray-900 dark:text-gray-100 font-medium">
+                      {challenge.answer.toUpperCase()} in {guesses.length} {guesses.length === 1 ? 'attempt' : 'attempts'}
+                    </p>
+                    {getRevealedHintsCount(hintStates) === 0 && (
+                      <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                        ⚡ No hints needed
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-lg mb-2">
+                      {getDiscoveryMessage(challenge.answer, guesses).message}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {getRevealedHintsCount(hintStates)} hint{getRevealedHintsCount(hintStates) !== 1 ? 's' : ''} revealed
+                    </p>
+                  </div>
+                )}
 
-              <div className="flex flex-col gap-2">
-                <Button onClick={handleShare} className="w-full">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share Result
-                </Button>
-                <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
-                  <Trophy className="h-4 w-4 mr-2" />
-                  View Stats
-                </Button>
+                {/* Countdown to next puzzle */}
+                <div className="text-center p-5 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Next puzzle in</p>
+                  <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
+                    {timeUntilNext}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Button onClick={handleShare} className="w-full">
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share Result
+                  </Button>
+                  <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    View Stats
+                  </Button>
+                </div>
               </div>
             </DialogDescription>
           </DialogHeader>
@@ -500,12 +553,12 @@ export default function App() {
               <div>
                 <h4 className="font-semibold mb-2">Hints:</h4>
                 <p className="text-sm mb-2">
-                  Get helpful hints as you make wrong guesses! Each wrong guess unlocks a new hint that gives you clues about the word.
+                  Each wrong guess unlocks a new hint. Click any unlocked hint to reveal it.
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Locked hints appear as small gray light bars</li>
-                  <li>🟡 Golden glow = new hint unlocked (click to view)</li>
-                  <li>🔵 Blue bar = hint available (already viewed)</li>
+                  <li>Earlier hints are harder, later hints are easier</li>
+                  <li>Clicking hint #4 automatically counts as using 4 hints</li>
+                  <li>Use fewer hints to show your skill!</li>
                 </ul>
               </div>
 

@@ -73,14 +73,32 @@ export function updateHintStates(
 }
 
 /**
- * Reveal a specific hint
+ * Check if a hint can be revealed (must be unlocked)
+ */
+export function canRevealHint(
+  hintStates: HintState[],
+  hintIndex: number
+): boolean {
+  return hintStates[hintIndex]?.unlocked || false;
+}
+
+/**
+ * Reveal a hint and automatically mark all previous hints as revealed
+ * This creates a "cost" system: clicking hint #4 counts as using 4 hints total
  */
 export function revealHint(
   hintStates: HintState[],
   hintIndex: number
 ): HintState[] {
+  // Check if hint can be revealed (is it unlocked?)
+  if (!canRevealHint(hintStates, hintIndex)) {
+    return hintStates; // Return unchanged if not unlocked
+  }
+
+  // Reveal the clicked hint AND all previous hints
+  // This rewards skill: clicking hint #4 = 4 hints used in stats
   return hintStates.map((hint, index) =>
-    index === hintIndex ? { ...hint, revealed: true } : hint
+    index <= hintIndex ? { ...hint, revealed: true } : hint
   );
 }
 
