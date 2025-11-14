@@ -45,45 +45,40 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
   }, [onEnter, onBackspace, onKeyPress]);
 
   return (
-    <div className="flex flex-col gap-2.5 max-w-lg mx-auto w-full px-2 sm:px-1">
+    <div className="flex flex-col gap-2 max-w-lg mx-auto w-full px-1 pb-safe">
       {KEYBOARD_ROWS.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex gap-1.5 sm:gap-2 justify-center">
+        <div key={rowIndex} className="flex gap-1 sm:gap-1.5 justify-center">
           {row.map((key) => {
             const isSpecial = key === 'ENTER' || key === 'BACK';
             const state = keyStates[key.toUpperCase()];
-            
+
             return (
               <motion.div
                 key={key}
-                whileHover={!disabled ? { 
-                  scale: 1.05, 
-                  y: -2,
-                  rotate: [0, -1, 1, 0]
+                whileTap={!disabled ? {
+                  scale: 0.92,
                 } : {}}
-                whileTap={!disabled ? { 
-                  scale: 0.95,
-                  y: 1,
-                } : {}}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 400, 
-                  damping: 17 
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 20
                 }}
               >
                 <Button
                   onClick={() => handleClick(key)}
                   disabled={disabled}
                   className={`
-                    min-h-[48px] sm:h-14 border-2
-                    ${isSpecial ? 'px-4 min-w-[70px] text-xs sm:text-sm font-extrabold' : 'w-10 sm:w-11 p-0 text-sm sm:text-base font-bold'}
-                    ${getKeyColor(key)} 
-                    rounded-xl sm:rounded-2xl
-                    transition-all duration-300
-                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    h-14 sm:h-16 border-2
+                    ${isSpecial ? 'px-3 min-w-[65px] sm:min-w-[75px] text-xs sm:text-sm font-extrabold' : 'w-9 sm:w-11 p-0 text-base sm:text-lg font-bold'}
+                    ${getKeyColor(key)}
+                    rounded-lg sm:rounded-xl
+                    transition-all duration-200
+                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
                     ${state !== 'unused' ? '[box-shadow:inset_0_-2px_0_rgba(0,0,0,0.15)]' : ''}
                     backdrop-blur-sm
                     relative overflow-hidden
                     group
+                    touch-none
                   `}
                   variant="secondary"
                 >

@@ -4,15 +4,57 @@
 
 /* Typography defaults - Steve Jobs approved */
 @layer base {
+  /* iOS-specific fixes for viewport and keyboard */
+  html {
+    height: 100%;
+    /* Prevent iOS bounce/overscroll */
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
   body {
     @apply font-sans antialiased;
     font-size: 16px;
     line-height: 1.5;
+    /* iOS viewport fix - use dvh (dynamic viewport height) */
+    height: 100%;
+    /* Prevent iOS text size adjustment */
+    -webkit-text-size-adjust: 100%;
+    /* Prevent iOS tap highlight */
+    -webkit-tap-highlight-color: transparent;
+    /* Allow scrolling on body */
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    /* Smooth scrolling for iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fix for iOS safe area */
+  #root {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* iOS safe area support */
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   h1, h2, h3, h4, h5, h6 {
     line-height: 1.2;
     letter-spacing: -0.02em;
+  }
+
+  /* Prevent iOS double-tap zoom on buttons */
+  button, a {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Ensure inputs don't zoom on iOS */
+  input, textarea, select {
+    font-size: 16px;
   }
 }
 
