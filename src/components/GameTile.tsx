@@ -58,14 +58,14 @@ export const GameTile = memo(function GameTile({ letter, state, position, delay 
   return (
     <motion.div
       className={`
-        w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem]
-        border-2 ${getBorderColor()} 
-        ${getBackgroundColor()} 
-        ${getTextColor()} 
+        w-14 h-14 sm:w-16 sm:h-16
+        border-2 ${getBorderColor()}
+        ${getBackgroundColor()}
+        ${getTextColor()}
         ${getShadow()}
-        flex items-center justify-center 
-        uppercase rounded-lg 
-        font-bold text-2xl sm:text-3xl
+        flex items-center justify-center
+        uppercase rounded-lg
+        font-bold text-xl sm:text-2xl
         transition-colors duration-200
       `}
       initial={shouldAnimate ? { rotateX: 0 } : false}

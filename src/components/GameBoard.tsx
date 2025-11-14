@@ -79,7 +79,7 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
   return (
     <div className="relative">
       <div className="rounded-2xl p-2 sm:p-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
           {rows.map((row, rowIndex) => {
             // Skip light bar for first row (rowIndex 0)
             // Map remaining rows to hints: row 1 -> hint 0, row 2 -> hint 1, etc.
@@ -91,7 +91,7 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
             const shouldShake = shakeRow === rowIndex;
 
             return (
-              <div key={rowIndex} className="flex flex-col gap-1.5">
+              <div key={rowIndex} className="flex flex-col gap-1">
                 {/* Minimal indicator - skip for first row */}
                 {rowIndex > 0 && (
                   <button
@@ -118,9 +118,9 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
                 
                 {/* Game tiles with victory glow and shake animation */}
                 <div className={`
-                  flex gap-2 justify-center transition-all duration-500
-                  ${row.isWinningRow 
-                    ? 'p-3 rounded-xl bg-gradient-to-r from-amber-50/80 via-yellow-50 to-amber-50/80 dark:from-amber-950/20 dark:via-yellow-950/30 dark:to-amber-950/20 shadow-lg animate-glow-pulse' 
+                  flex gap-1 justify-center transition-all duration-500
+                  ${row.isWinningRow
+                    ? 'p-2 rounded-xl bg-gradient-to-r from-amber-50/80 via-yellow-50 to-amber-50/80 dark:from-amber-950/20 dark:via-yellow-950/30 dark:to-amber-950/20 shadow-lg animate-glow-pulse'
                     : ''
                   }
                   ${shouldShake ? 'animate-shake' : ''}
