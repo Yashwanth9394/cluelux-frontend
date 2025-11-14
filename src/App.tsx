@@ -318,10 +318,10 @@ export default function App() {
     // Calculate hints used
     const totalHintsUsed = getRevealedHintsCount(hintStates);
 
-    // Add thunder symbol if no hints were used
-    const hintGlyph = totalHintsUsed === 0 ? ' ⚡' : '';
+    // Show hint count with thunder symbol
+    const hintGlyph = totalHintsUsed === 0 ? ' ⚡' : ` · ${totalHintsUsed}⚡`;
 
-    const text = `ClueLux #${challenge.gameNumber} · ${guesses.length}/${MAX_GUESSES}${hintGlyph}\n\n${emoji}`;
+    const text = `ClueLux #${challenge.gameNumber}${hintGlyph}\n\n${emoji}`;
 
     // Try native share API first (works on mobile)
     if (navigator.share) {
