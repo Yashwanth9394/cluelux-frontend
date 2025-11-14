@@ -45,7 +45,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
   }, [onEnter, onBackspace, onKeyPress]);
 
   return (
-    <div className="flex flex-col gap-2 max-w-lg mx-auto w-full px-1 pb-safe">
+    <div className="flex flex-col gap-2 max-w-lg mx-auto w-full px-3 sm:px-4 pb-safe">
       {KEYBOARD_ROWS.map((row, rowIndex) => (
         <div key={rowIndex} className="flex gap-1 sm:gap-1.5 justify-center">
           {row.map((key) => {

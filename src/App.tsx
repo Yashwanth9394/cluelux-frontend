@@ -62,7 +62,6 @@ export default function App() {
         const formattedData = formatDailyWordForGame(data);
         setChallenge(formattedData);
         setHintStates(initializeHints(formattedData.hints));
-        toast.success('Daily word loaded! 🎯', { duration: 2000 });
       } catch (error) {
         console.error('Failed to load daily word:', error);
         toast.error('Using offline word', {
@@ -114,17 +113,10 @@ export default function App() {
       
       if (savedState.gameStatus !== 'playing') {
         setShowResult(true);
-      } else {
-        toast.info('Welcome back! Game restored 🎮');
       }
     } else {
       // Start fresh game
       clearGameState();
-      const greeting = getCombinedGreeting();
-      toast.info(greeting, {
-        description: `ClueLux #${challenge.gameNumber}`,
-        duration: 4000,
-      });
     }
   }, [isLoading, challenge]);
 
@@ -205,12 +197,8 @@ export default function App() {
       const currentRow = guesses.length;
       setShakeRow(currentRow);
       setTimeout(() => setShakeRow(null), 500);
-      
+
       setErrorMessage(validation.error || 'Invalid guess');
-      // Still show toast but shake provides immediate visual feedback
-      toast.error(validation.error || 'Invalid guess', {
-        duration: 2000,
-      });
       setTimeout(() => setErrorMessage(''), 2000);
       return;
     }
@@ -285,14 +273,6 @@ export default function App() {
       const stats = loadStats();
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
-      
-      // Use discovery message instead of "game over"
-      const discovery = getDiscoveryMessage(challenge.answer, newGuesses);
-      toast(discovery.title, {
-        description: discovery.message,
-        icon: discovery.emoji,
-        duration: 5000,
-      });
       return;
     }
 
@@ -314,8 +294,7 @@ export default function App() {
   const handleRevealHint = (index: number) => {
     const newHintStates = revealHint(hintStates, index);
     setHintStates(newHintStates);
-    toast.success('💡 Hint revealed!');
-    
+
     // Save updated state
     const currentState = loadGameState();
     if (currentState) {
