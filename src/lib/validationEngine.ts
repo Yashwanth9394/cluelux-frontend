@@ -9,12 +9,20 @@ import valid5 from '../data/words/valid_5_letter.json';
 import valid6 from '../data/words/valid_6_letter.json';
 import valid7 from '../data/words/valid_7_letter.json';
 import valid8 from '../data/words/valid_8_letter.json';
+import valid9 from '../data/words/valid_9_letter.json';
+import valid10 from '../data/words/valid_10_letter.json';
+import valid11 from '../data/words/valid_11_letter.json';
+import valid12 from '../data/words/valid_12_letter.json';
 
 // Type the imports
 const valid5List = valid5 as ValidWordList;
 const valid6List = valid6 as ValidWordList;
 const valid7List = valid7 as ValidWordList;
 const valid8List = valid8 as ValidWordList;
+const valid9List = valid9 as ValidWordList;
+const valid10List = valid10 as ValidWordList;
+const valid11List = valid11 as ValidWordList;
+const valid12List = valid12 as ValidWordList;
 
 // Create word sets for fast lookup
 const validWordSets: Record<number, Set<string>> = {
@@ -22,6 +30,10 @@ const validWordSets: Record<number, Set<string>> = {
   6: new Set(valid6List.words),
   7: new Set(valid7List.words),
   8: new Set(valid8List.words),
+  9: new Set(valid9List.words),
+  10: new Set(valid10List.words),
+  11: new Set(valid11List.words),
+  12: new Set(valid12List.words),
 };
 
 /**
