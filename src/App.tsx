@@ -160,6 +160,12 @@ export default function App() {
       midnightET.setHours(24, 0, 0, 0);
 
       const diff = midnightET.getTime() - etNow.getTime();
+
+      // Check if time is up
+      if (diff <= 0) {
+        return '0:00:00';
+      }
+
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
@@ -502,10 +508,25 @@ export default function App() {
 
                 {/* Countdown to next puzzle */}
                 <div className="text-center p-5 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 rounded-xl border border-indigo-200 dark:border-indigo-800">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Next puzzle in</p>
-                  <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
-                    {timeUntilNext}
-                  </p>
+                  {timeUntilNext === '0:00:00' ? (
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">New puzzle available!</p>
+                      <Button
+                        onClick={handleNewGame}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Load New Puzzle
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Next puzzle in</p>
+                      <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
+                        {timeUntilNext}
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2">
