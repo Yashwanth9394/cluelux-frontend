@@ -399,9 +399,14 @@ export default function App() {
       <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
           {/* Compact title for mobile */}
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
-            ClueLux
-          </h1>
+          <div className="flex flex-col">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+              ClueLux
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              {challenge.wordLength}-letter challenge
+            </p>
+          </div>
           <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
@@ -428,7 +433,7 @@ export default function App() {
         {/* Game Info - Minimal, only essential */}
         <div className="text-center mb-1">
           <p className="text-gray-500 dark:text-gray-400 text-xs">
-            {guesses.length}/{MAX_GUESSES} attempts
+            {guesses.length}/{MAX_GUESSES} attempts · {getRevealedHintsCount(hintStates)}⚡ hints
           </p>
         </div>
 
