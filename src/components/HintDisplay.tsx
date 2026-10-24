@@ -34,8 +34,7 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
       
       {isExpanded && (
         <div className="mt-1.5 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-          {hints.filter(hint => hint.unlocked).map((hint) => {
-            const canReveal = canRevealHint(hints, hint.index);
+          {hints.filter(hint => hint.revealed || canRevealHint(hints, hint.index)).map((hint) => {
             const hintCost = hint.index + 1;
 
             return (
@@ -44,17 +43,15 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
                 className={`p-2.5 transition-all duration-300 ${
                   hint.revealed
                     ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-300 dark:border-blue-800 shadow-sm'
-                    : canReveal
-                    ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 hover:shadow-md'
-                    : 'bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 opacity-40'
+                    : 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 hover:shadow-md'
                 }`}
-                onClick={() => canReveal && !hint.revealed && onRevealHint(hint.index)}
+                onClick={() => !hint.revealed && onRevealHint(hint.index)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     {hint.revealed ? (
                       <p className="text-xs text-gray-800 dark:text-gray-200 leading-relaxed">{hint.text}</p>
-                    ) : canReveal ? (
+                    ) : (
                       <div className="flex items-center justify-between w-full">
                         <div className="flex items-center gap-1.5">
                           <span className="text-yellow-600 dark:text-yellow-500 text-xs leading-none animate-pulse" aria-hidden="true">●</span>
@@ -67,13 +64,6 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
                             Costs {hintCost}
                           </p>
                         )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-gray-400 text-xs leading-none" aria-hidden="true">🔒</span>
-                        <p className="text-xs text-gray-400">
-                          Reveal Hint {hint.index} first
-                        </p>
                       </div>
                     )}
                   </div>
