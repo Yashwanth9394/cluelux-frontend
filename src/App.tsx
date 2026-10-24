@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 // Import our game engines
 import { evaluateGuess, isWinningGuess, getMaxAttempts, updateKeyboardState, initializeKeyboardState, validateGuessInput } from './lib/gameEngine';
 import { initializeHints, updateHintStates, revealHint, getRevealedHintsCount } from './lib/hintManager';
-import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, updateStats, isCurrentGameToday, canStartPracticeGame, getRemainingPracticeGames } from './lib/localStorage';
+import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, updateStats, isCurrentGameToday } from './lib/localStorage';
 
 // Import types
 import type { TileState, KeyState, GameStatus, GameState, HintState, GameMode } from './types/game.types';
@@ -21,7 +21,7 @@ import type { TileState, KeyState, GameStatus, GameState, HintState, GameMode } 
 import { getCombinedGreeting, getDiscoveryMessage, getVictoryMessage } from './utils/personality';
 
 // Import API service
-import { fetchDailyWord, formatDailyWordForGame, fetchPracticeWord, formatPracticeWordForGame, recordPlay } from './services/api';
+import { fetchDailyWord, formatDailyWordForGame, recordPlay } from './services/api';
 
 // Fallback data in case API is not available
 import todayData from './data/today.json';
@@ -328,50 +328,6 @@ export default function App() {
     window.location.reload();
   };
 
-  const handleStartPractice = async () => {
-    // Check if user has remaining practice games
-    if (!canStartPracticeGame()) {
-      toast.error('Daily practice limit reached', {
-        description: 'You can play 5 practice games per day. Come back tomorrow!',
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setShowResult(false);
-
-      // Fetch practice word from backend (random past daily word)
-      const data = await fetchPracticeWord();
-      const formattedData = formatPracticeWordForGame(data);
-
-      // Reset ALL game state for fresh practice game
-      setChallenge(formattedData);
-      setGameMode('practice');
-      setGuesses([]);
-      setCurrentGuess('');
-      setEvaluations([]);
-      setKeyStates(initializeKeyboardState());
-      setGameStatus('playing');
-      setHintStates(initializeHints(formattedData.hints));
-      setHintsUsedPerGuess([]);
-      setPlaysToday(null);
-
-      const remaining = getRemainingPracticeGames() - 1; // -1 because we just started one
-      toast.success('Practice mode started!', {
-        description: `${remaining} practice game${remaining !== 1 ? 's' : ''} remaining today`,
-      });
-    } catch (error) {
-      toast.error('Could not start practice mode');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleBackToDaily = () => {
-    window.location.reload();
-  };
-
   const handleShare = async () => {
     const emoji = evaluations.map(row =>
       row.map(state =>
@@ -541,37 +497,6 @@ export default function App() {
             wordLength={challenge.wordLength}
           />
         </div>
-
-        {/* Mode Toggle Buttons */}
-        {gameStatus !== 'playing' && (
-          <div className="mt-4 flex flex-col gap-2">
-            {gameMode === 'daily' ? (
-              <>
-                <Button
-                  onClick={handleStartPractice}
-                  variant="outline"
-                  disabled={!canStartPracticeGame()}
-                  className="w-full border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Practice Mode ({getRemainingPracticeGames()}/5 today)
-                </Button>
-                {getRemainingPracticeGames() === 0 && (
-                  <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                    Practice limit reached. Come back tomorrow!
-                  </p>
-                )}
-              </>
-            ) : (
-              <Button
-                onClick={handleBackToDaily}
-                variant="outline"
-                className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950"
-              >
-                Back to Daily Challenge
-              </Button>
-            )}
-          </div>
-        )}
       </main>
 
       {/* Result Dialog */}
@@ -646,39 +571,16 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Action buttons - different for daily vs practice */}
+                {/* Action buttons */}
                 <div className="flex flex-col gap-2">
-                  {gameMode === 'daily' ? (
-                    <>
-                      <Button onClick={handleShare} className="w-full">
-                        <span className="mr-2" aria-hidden="true">📤</span>
-                        Share Result
-                      </Button>
-                      <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
-                        <span className="mr-2" aria-hidden="true">🏆</span>
-                        View Stats
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={handleStartPractice}
-                        disabled={!canStartPracticeGame()}
-                        className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <span className="mr-2" aria-hidden="true">↻</span>
-                        New Practice Game ({getRemainingPracticeGames()}/5 left)
-                      </Button>
-                      {getRemainingPracticeGames() === 0 && (
-                        <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                          Daily limit reached. Come back tomorrow for more practice!
-                        </p>
-                      )}
-                      <Button onClick={handleBackToDaily} variant="outline" className="w-full">
-                        Back to Daily Challenge
-                      </Button>
-                    </>
-                  )}
+                  <Button onClick={handleShare} className="w-full">
+                    <span className="mr-2" aria-hidden="true">📤</span>
+                    Share Result
+                  </Button>
+                  <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
+                    <span className="mr-2" aria-hidden="true">🏆</span>
+                    View Stats
+                  </Button>
                 </div>
               </div>
             </DialogDescription>

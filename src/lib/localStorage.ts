@@ -235,20 +235,3 @@ export function isCurrentGameToday(todayDate: string): boolean {
   const state = loadGameState();
   return state !== null && state.date === todayDate;
 }
-
-/**
- * Get remaining practice games for today (max 5 per day)
- */
-export function getRemainingPracticeGames(): number {
-  const stats = loadStats();
-  const MAX_PRACTICE_GAMES = 5;
-  const gamesPlayedToday = stats.practice?.gamesPlayedToday || 0;
-  return Math.max(0, MAX_PRACTICE_GAMES - gamesPlayedToday);
-}
-
-/**
- * Check if user can start a new practice game
- */
-export function canStartPracticeGame(): boolean {
-  return getRemainingPracticeGames() > 0;
-}
