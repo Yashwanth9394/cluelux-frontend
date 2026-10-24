@@ -65,8 +65,13 @@ export async function fetchDailyWord(): Promise<DailyWordResponse> {
   }
 
   try {
+    // no-store: the Lambda's Cache-Control header is meant for CloudFront's
+    // edge cache (prod) and is harmless there either way, but without this
+    // the player's own browser also honors it - which silently serves stale
+    // data for hours against the UAT backend (no CDN in front to begin with).
     const response = await fetch(fullUrl, {
       method: 'GET',
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -127,8 +132,13 @@ export async function fetchPracticeWord(): Promise<DailyWordResponse> {
   const fullUrl = `${API_BASE_URL}/practice-word`;
 
   try {
+    // no-store: the Lambda's Cache-Control header is meant for CloudFront's
+    // edge cache (prod) and is harmless there either way, but without this
+    // the player's own browser also honors it - which silently serves stale
+    // data for hours against the UAT backend (no CDN in front to begin with).
     const response = await fetch(fullUrl, {
       method: 'GET',
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
       },

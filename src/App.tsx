@@ -792,6 +792,13 @@ export default function App() {
         </DialogContent>
       </Dialog>
 
+      {/* Footer */}
+      <footer className="border-t border-gray-200 dark:border-slate-800 py-2 bg-white dark:bg-slate-950">
+        <div className="max-w-4xl mx-auto px-4 text-center text-xs text-gray-500 dark:text-gray-400">
+          <p>Crafted for word lovers everywhere</p>
+        </div>
+      </footer>
+
     </div>
   );
 }
