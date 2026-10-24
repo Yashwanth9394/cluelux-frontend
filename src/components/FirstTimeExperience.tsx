@@ -9,7 +9,8 @@ interface FirstTimeExperienceProps {
   onComplete: () => void;
 }
 
-const TUTORIAL_KEY = 'hasSeenTutorial';
+const TUTORIAL_VIEWS_KEY = 'tutorialViewCount';
+const MAX_TUTORIAL_VIEWS = 3;
 
 export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
   const [step, setStep] = useState(1);
@@ -47,8 +48,9 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
     if (step === 1) {
       setStep(2);
     } else {
-      // Mark tutorial as complete and close
-      localStorage.setItem(TUTORIAL_KEY, 'true');
+      // Count this view - tutorial stops showing after MAX_TUTORIAL_VIEWS
+      const seen = Number(localStorage.getItem(TUTORIAL_VIEWS_KEY) || '0');
+      localStorage.setItem(TUTORIAL_VIEWS_KEY, String(seen + 1));
       onComplete();
     }
   };
@@ -176,7 +178,9 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
   );
 }
 
-// Export utility to check if tutorial should show
+// Export utility to check if tutorial should show - true for the first
+// MAX_TUTORIAL_VIEWS times a player completes it, never again after that.
 export function shouldShowTutorial(): boolean {
-  return !localStorage.getItem(TUTORIAL_KEY);
+  const seen = Number(localStorage.getItem(TUTORIAL_VIEWS_KEY) || '0');
+  return seen < MAX_TUTORIAL_VIEWS;
 }
