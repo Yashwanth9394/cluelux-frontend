@@ -8,9 +8,11 @@ interface GameTileProps {
   state: TileState;
   position: number;
   delay?: number;
+  /** CSS size (e.g. from GameBoard's fluid clamp()) - falls back to the old fixed size if omitted. */
+  size?: string;
 }
 
-export const GameTile = memo(function GameTile({ letter, state, position, delay = 0 }: GameTileProps) {
+export const GameTile = memo(function GameTile({ letter, state, position, delay = 0, size }: GameTileProps) {
   const getBorderColor = () => {
     if (state === 'filled') return 'border-indigo-400';
     if (state === 'empty') return 'border-gray-300';
@@ -58,36 +60,38 @@ export const GameTile = memo(function GameTile({ letter, state, position, delay 
   return (
     <motion.div
       className={`
-        w-14 h-14 sm:w-16 sm:h-16
+        ${size ? '' : 'w-14 h-14 sm:w-16 sm:h-16'}
         border-2 ${getBorderColor()}
         ${getBackgroundColor()}
         ${getTextColor()}
         ${getShadow()}
         flex items-center justify-center
         uppercase rounded-lg
-        font-bold text-xl sm:text-2xl
+        font-bold
+        ${size ? '' : 'text-xl sm:text-2xl'}
         transition-colors duration-200
       `}
       initial={shouldAnimate ? { rotateX: 0 } : false}
-      animate={shouldAnimate ? { 
+      animate={shouldAnimate ? {
         rotateX: [0, 90, 90, 0],
         scale: [1, 1.05, 1.05, 1]
-      } : { 
-        scale: letter ? [1, 1.1, 1] : 1 
+      } : {
+        scale: letter ? [1, 1.1, 1] : 1
       }}
       transition={
         shouldAnimate
-          ? { 
-              duration: 0.6, 
+          ? {
+              duration: 0.6,
               delay: delay * 0.15,
               times: [0, 0.25, 0.5, 1],
               ease: "easeOut"
             }
           : { duration: 0.15, ease: "easeOut" }
       }
-      style={{ 
+      style={{
         transformStyle: 'preserve-3d',
-        perspective: '1000px'
+        perspective: '1000px',
+        ...(size ? { width: size, height: size, fontSize: `clamp(0.85rem, calc(${size} * 0.42), 1.5rem)` } : {}),
       }}
     >
       <span className="relative z-10">

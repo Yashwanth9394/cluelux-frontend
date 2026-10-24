@@ -70,6 +70,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
             return (
               <motion.div
                 key={key}
+                className={isSpecial ? 'shrink-0' : 'flex-1 min-w-0 max-w-[44px]'}
                 whileTap={!keyDisabled ? {
                   scale: 0.92,
                 } : {}}
@@ -84,7 +85,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
                   disabled={keyDisabled}
                   className={`
                     h-14 sm:h-16 border-2
-                    ${isSpecial ? 'px-3 min-w-[65px] sm:min-w-[75px] text-xs sm:text-sm font-extrabold' : 'w-9 sm:w-11 p-0 text-base sm:text-lg font-bold'}
+                    ${isSpecial ? 'px-3 min-w-[56px] sm:min-w-[75px] text-xs sm:text-sm font-extrabold' : 'w-full p-0 text-base sm:text-lg font-bold'}
                     ${key === 'ENTER' && isWordComplete && !disabled
                       ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 text-gray-800 dark:text-gray-200 hover:bg-amber-100 dark:hover:bg-amber-950/50'
                       : getKeyColor(key)}

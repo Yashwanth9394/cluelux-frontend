@@ -445,10 +445,11 @@ export default function App() {
 
       {/* Header - Clean and minimal with 8px grid spacing */}
       <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
-          {/* Compact title for mobile */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
+        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
+          {/* Compact title for mobile - min-w-0 + flex-wrap so this shrinks/wraps
+              instead of pushing the icon buttons off-screen at large text sizes */}
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
                 ClueLux
               </h1>
@@ -466,7 +467,7 @@ export default function App() {
               {challenge.wordLength}-letter challenge
             </p>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <Button
               variant="ghost"
               size="icon"

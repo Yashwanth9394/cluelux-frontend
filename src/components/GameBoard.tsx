@@ -22,6 +22,20 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
   const [showPopup, setShowPopup] = useState<number | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
 
+  // Fluid tile size: words run 5-12 letters, and a fixed tile size that looks
+  // right at 6 letters overflows badly at 12 on a narrow phone (or a folded
+  // foldable, where height is the tighter constraint than width - hence
+  // vmin, not vw, so it adapts to whichever dimension is actually smaller).
+  const gapPx = 4; // matches the row's gap-1
+  // 84vmin, not 100: leaves room for the page's own side padding (px-4, 32px)
+  // and the board card's padding (p-2, 16px) that sit outside this row.
+  // Bounds are px, not rem: the OS/browser "larger text" setting can scale
+  // the root font-size independently of the actual viewport, and a rem floor
+  // would scale right along with it, fighting the vmin term and overflowing
+  // again. Real pinch/page zoom (re-enabled by the viewport meta fix) scales
+  // vmin itself correctly, so this doesn't need to track font-size at all.
+  const tileSize = `clamp(22px, calc((84vmin - ${(wordLength - 1) * gapPx}px) / ${wordLength}), 64px)`;
+
   const rows = Array.from({ length: maxGuesses }, (_, i) => {
     if (i < guesses.length) {
       return {
@@ -134,6 +148,7 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
                       key={`${rowIndex}-${colIndex}`}
                       letter={letter.trim()}
                       state={letter.trim() ? row.states[colIndex] : 'empty'}
+                      size={tileSize}
                       position={colIndex}
                       delay={rowIndex < guesses.length ? colIndex : 0}
                     />

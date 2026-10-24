@@ -31,12 +31,13 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Fix for iOS safe area */
+  /* Fix for iOS safe area - top too, so the header never sits under a
+     notch/Dynamic Island now that viewport-fit=cover renders edge to edge */
   #root {
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    /* iOS safe area support */
+    padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
 
