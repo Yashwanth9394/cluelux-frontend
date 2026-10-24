@@ -377,7 +377,7 @@ export default function App() {
     const emoji = evaluations.map(row =>
       row.map(state =>
         state === 'correct' ? '🟢😊' :
-        state === 'present' ? '🟡😐' : '⬜'
+        state === 'present' ? '😐' : '⚪'
       ).join('')
     ).join('\n');
 
