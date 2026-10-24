@@ -22,7 +22,7 @@ import type { TileState, KeyState, GameStatus, GameState, HintState, GameMode } 
 import { getCombinedGreeting, getDiscoveryMessage, getVictoryMessage } from './utils/personality';
 
 // Import API service
-import { fetchDailyWord, formatDailyWordForGame, fetchPracticeWord, formatPracticeWordForGame } from './services/api';
+import { fetchDailyWord, formatDailyWordForGame, fetchPracticeWord, formatPracticeWordForGame, recordPlay } from './services/api';
 
 // Fallback data in case API is not available
 import todayData from './data/today.json';
@@ -49,6 +49,7 @@ export default function App() {
   const [showStats, setShowStats] = useState(false);
   const [shakeRow, setShakeRow] = useState<number | null>(null);
   const [timeUntilNext, setTimeUntilNext] = useState('');
+  const [playsToday, setPlaysToday] = useState<number | null>(null);
 
   // Hint system
   const [hintStates, setHintStates] = useState<HintState[]>(() => initializeHints(challenge.hints));
@@ -246,12 +247,18 @@ export default function App() {
         wordLength: challenge.wordLength,
       };
       saveGameState(finalState);
-      
+
       // Update stats
       const stats = loadStats();
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
-      
+
+      // Daily challenge only - practice completions aren't "today's puzzle"
+      // and shouldn't count toward or be compared against that total.
+      if (gameMode === 'daily') {
+        recordPlay(challenge.date).then(setPlaysToday);
+      }
+
       // Steve Jobs: SILENCE is golden
       // No toast. No noise. Just let the green tiles speak.
       // The user KNOWS they won. Don't tell them what they already feel.
@@ -278,11 +285,15 @@ export default function App() {
         wordLength: challenge.wordLength,
       };
       saveGameState(finalState);
-      
+
       // Update stats
       const stats = loadStats();
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
+
+      if (gameMode === 'daily') {
+        recordPlay(challenge.date).then(setPlaysToday);
+      }
       return;
     }
 
@@ -345,6 +356,7 @@ export default function App() {
       setGameStatus('playing');
       setHintStates(initializeHints(formattedData.hints));
       setHintsUsedPerGuess([]);
+      setPlaysToday(null);
 
       const remaining = getRemainingPracticeGames() - 1; // -1 because we just started one
       toast.success('Practice mode started!', {
@@ -590,6 +602,11 @@ export default function App() {
                     {getRevealedHintsCount(hintStates) === 0 && (
                       <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
                         ⚡ No hints needed
+                      </p>
+                    )}
+                    {playsToday !== null && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        {playsToday.toLocaleString()} {playsToday === 1 ? 'play' : 'plays'} today
                       </p>
                     )}
                   </div>

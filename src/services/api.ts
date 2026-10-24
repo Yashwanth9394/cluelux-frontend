@@ -12,9 +12,21 @@ export interface DailyWordResponse {
 // Backend API endpoint - update this after deploying CDK stack
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-// Direct API Gateway URL (never CloudFront) for local preview-date testing only.
-// Not a secret - same URL already used for normal API calls, just without the CDN in front.
+// Prod's direct API Gateway URL (never the custom CloudFront in front of it).
+// Not a secret - same URL already used for normal API calls, just without
+// that CDN, which only allows GET/HEAD/OPTIONS - so this is also what any
+// POST (like recording a play, below) against prod has to use instead.
 const PREVIEW_API_URL = 'https://qp5p347l9l.execute-api.us-east-1.amazonaws.com/prod';
+
+/**
+ * The URL to call for anything that must bypass the custom prod CloudFront
+ * (which rejects POST outright). UAT's own VITE_API_URL is already a direct
+ * API Gateway URL (UAT has no custom CloudFront in front of it at all), so
+ * it needs no swap; only prod's CloudFront URL does.
+ */
+function getDirectApiUrl(): string {
+  return API_BASE_URL.includes('cloudfront.net') ? PREVIEW_API_URL : API_BASE_URL;
+}
 
 /**
  * Dev-only override to load a specific date instead of real "today" - e.g. to
@@ -113,11 +125,34 @@ export async function fetchDailyWord(): Promise<DailyWordResponse> {
 }
 
 /**
+ * Records one completed game (win or loss) against a date and returns the
+ * running total of plays for that date. Call exactly once, at the moment
+ * a game actually ends - never on page load/restore of an already-finished
+ * game, or it double-counts. Non-fatal by design: the game has already
+ * ended either way, so a failed network call here shouldn't disrupt that -
+ * it just means no count to show.
+ */
+export async function recordPlay(date: string): Promise<number | null> {
+  try {
+    const url = `${getDirectApiUrl()}/daily-word/plays?date=${date}`;
+    const response = await fetch(url, { method: 'POST', cache: 'no-store' });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return typeof data.count === 'number' ? data.count : null;
+  } catch (error) {
+    console.error('Error recording play:', error);
+    return null;
+  }
+}
+
+/**
  * Format the daily word data for the game
  */
 export function formatDailyWordForGame(data: DailyWordResponse) {
+  // Launch day (Nov 1, 2026) is #1. Anything before that counts backward
+  // (Oct 31 = 0, Oct 30 = -1, ...) rather than using an arbitrary epoch.
   const gameNumber = Math.floor(
-    (new Date(data.date).getTime() - new Date('2025-01-01').getTime()) /
+    (new Date(data.date).getTime() - new Date('2026-11-01').getTime()) /
     (1000 * 60 * 60 * 24)
   ) + 1;
 
