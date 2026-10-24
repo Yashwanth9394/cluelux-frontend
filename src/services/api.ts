@@ -32,6 +32,18 @@ function getPreviewOverride(): { date: string; key: string } | null {
 }
 
 /**
+ * Shared-link date override, e.g. https://uat.../?date=2026-11-05 - lets a
+ * tester hand someone a link to a specific day's puzzle. No secret involved;
+ * the backend only honors this when OPEN_DATE_OVERRIDE is set (UAT only -
+ * see GetDailyWordHandler.java), so this is a harmless no-op against prod
+ * regardless of what's in this function.
+ */
+function getSharedDateOverride(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('date');
+}
+
+/**
  * Get today's date in ET timezone (YYYY-MM-DD format)
  */
 function getTodayET(): string {
@@ -52,10 +64,13 @@ function getTodayET(): string {
  */
 export async function fetchDailyWord(): Promise<DailyWordResponse> {
   const preview = getPreviewOverride();
+  const sharedDate = getSharedDateOverride();
   let fullUrl: string;
   if (preview) {
     console.warn(`[DEV PREVIEW] Loading ${preview.date} instead of today. Remove VITE_PREVIEW_DATE from .env.local to go back to normal.`);
     fullUrl = `${PREVIEW_API_URL}/daily-word?previewDate=${preview.date}&previewKey=${preview.key}`;
+  } else if (sharedDate) {
+    fullUrl = `${API_BASE_URL}/daily-word?date=${sharedDate}`;
   } else {
     // Add date as cache-busting parameter
     // This ensures each day gets a unique URL, so CloudFront caches separately
