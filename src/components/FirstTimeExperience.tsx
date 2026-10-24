@@ -161,7 +161,7 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
                   💎 Skill Reward System
                 </p>
                 <p className="text-xs text-indigo-700 dark:text-indigo-300">
-                  Earlier hints are harder. Skipping to hint #4? Counts as using all 4 hints. Use fewer to show skill!
+                  Earlier hints are harder. Hints reveal one at a time, in order. Use fewer to show skill!
                 </p>
               </div>
 

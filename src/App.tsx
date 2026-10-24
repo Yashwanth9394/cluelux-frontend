@@ -13,16 +13,16 @@ import { toast } from 'sonner';
 // Import our game engines
 import { evaluateGuess, isWinningGuess, getMaxAttempts, updateKeyboardState, initializeKeyboardState, validateGuessInput } from './lib/gameEngine';
 import { initializeHints, updateHintStates, revealHint, getRevealedHintsCount } from './lib/hintManager';
-import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, updateStats, isCurrentGameToday } from './lib/localStorage';
+import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, updateStats, isCurrentGameToday, canStartPracticeGame, getRemainingPracticeGames } from './lib/localStorage';
 
 // Import types
-import type { TileState, KeyState, GameStatus, GameState, HintState } from './types/game.types';
+import type { TileState, KeyState, GameStatus, GameState, HintState, GameMode } from './types/game.types';
 
 // Import personality utilities
 import { getCombinedGreeting, getDiscoveryMessage, getVictoryMessage } from './utils/personality';
 
 // Import API service
-import { fetchDailyWord, formatDailyWordForGame } from './services/api';
+import { fetchDailyWord, formatDailyWordForGame, fetchPracticeWord, formatPracticeWordForGame } from './services/api';
 
 // Fallback data in case API is not available
 import todayData from './data/today.json';
@@ -31,6 +31,7 @@ export default function App() {
   // Today's challenge data - will be loaded from API
   const [challenge, setChallenge] = useState(todayData);
   const [isLoading, setIsLoading] = useState(true);
+  const [gameMode, setGameMode] = useState<GameMode>('daily');
   const MAX_GUESSES = getMaxAttempts(challenge.wordLength);
 
   // Tutorial state
@@ -79,15 +80,16 @@ export default function App() {
   // Initialize or restore game
   useEffect(() => {
     if (isLoading) return; // Wait for word to load
-    
+
     const savedState = loadGameState();
-    
+
     if (savedState && isCurrentGameToday(challenge.date)) {
       // Restore saved game
       setGuesses(savedState.guesses);
       setEvaluations(savedState.evaluations);
       setGameStatus(savedState.gameStatus);
-      
+      setGameMode(savedState.gameMode || 'daily'); // Restore game mode with fallback
+
       // Restore hints used per guess tracking
       if (savedState.hintsUsedPerGuess) {
         setHintsUsedPerGuess(savedState.hintsUsedPerGuess);
@@ -230,10 +232,11 @@ export default function App() {
     // Check win condition
     if (isWinningGuess(evaluation)) {
       setGameStatus('won');
-      
+
       const finalState: GameState = {
         date: challenge.date,
         gameNumber: challenge.gameNumber,
+        gameMode: gameMode,
         guesses: newGuesses,
         evaluations: newEvaluations,
         hintsRevealed: getRevealedHintsCount(hintStates),
@@ -265,6 +268,7 @@ export default function App() {
       const finalState: GameState = {
         date: challenge.date,
         gameNumber: challenge.gameNumber,
+        gameMode: gameMode,
         guesses: newGuesses,
         evaluations: newEvaluations,
         hintsRevealed: getRevealedHintsCount(hintStates),
@@ -286,6 +290,7 @@ export default function App() {
     const currentState: GameState = {
       date: challenge.date,
       gameNumber: challenge.gameNumber,
+      gameMode: gameMode,
       guesses: newGuesses,
       evaluations: newEvaluations,
       hintsRevealed: getRevealedHintsCount(hintStates),
@@ -310,6 +315,49 @@ export default function App() {
   };
 
   const handleNewGame = () => {
+    window.location.reload();
+  };
+
+  const handleStartPractice = async () => {
+    // Check if user has remaining practice games
+    if (!canStartPracticeGame()) {
+      toast.error('Daily practice limit reached', {
+        description: 'You can play 5 practice games per day. Come back tomorrow!',
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setShowResult(false);
+
+      // Fetch practice word from backend (random past daily word)
+      const data = await fetchPracticeWord();
+      const formattedData = formatPracticeWordForGame(data);
+
+      // Reset ALL game state for fresh practice game
+      setChallenge(formattedData);
+      setGameMode('practice');
+      setGuesses([]);
+      setCurrentGuess('');
+      setEvaluations([]);
+      setKeyStates(initializeKeyboardState());
+      setGameStatus('playing');
+      setHintStates(initializeHints(formattedData.hints));
+      setHintsUsedPerGuess([]);
+
+      const remaining = getRemainingPracticeGames() - 1; // -1 because we just started one
+      toast.success('Practice mode started!', {
+        description: `${remaining} practice game${remaining !== 1 ? 's' : ''} remaining today`,
+      });
+    } catch (error) {
+      toast.error('Could not start practice mode');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBackToDaily = () => {
     window.location.reload();
   };
 
@@ -400,9 +448,20 @@ export default function App() {
         <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
           {/* Compact title for mobile */}
           <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
-              ClueLux
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+                ClueLux
+              </h1>
+              {gameMode === 'daily' ? (
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                  Daily Challenge
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                  Practice Mode
+                </span>
+              )}
+            </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
               {challenge.wordLength}-letter challenge
             </p>
@@ -465,8 +524,41 @@ export default function App() {
             onBackspace={handleBackspace}
             keyStates={keyStates}
             disabled={gameStatus !== 'playing'}
+            currentGuessLength={currentGuess.length}
+            wordLength={challenge.wordLength}
           />
         </div>
+
+        {/* Mode Toggle Buttons */}
+        {gameStatus !== 'playing' && (
+          <div className="mt-4 flex flex-col gap-2">
+            {gameMode === 'daily' ? (
+              <>
+                <Button
+                  onClick={handleStartPractice}
+                  variant="outline"
+                  disabled={!canStartPracticeGame()}
+                  className="w-full border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Practice Mode ({getRemainingPracticeGames()}/5 today)
+                </Button>
+                {getRemainingPracticeGames() === 0 && (
+                  <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                    Practice limit reached. Come back tomorrow!
+                  </p>
+                )}
+              </>
+            ) : (
+              <Button
+                onClick={handleBackToDaily}
+                variant="outline"
+                className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950"
+              >
+                Back to Daily Challenge
+              </Button>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Result Dialog */}
@@ -511,38 +603,64 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Countdown to next puzzle */}
-                <div className="text-center p-5 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 rounded-xl border border-indigo-200 dark:border-indigo-800">
-                  {timeUntilNext === '0:00:00' ? (
-                    <div className="space-y-3">
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">New puzzle available!</p>
-                      <Button
-                        onClick={handleNewGame}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                      >
-                        <RotateCcw className="h-4 w-4 mr-2" />
-                        Load New Puzzle
+                {/* Countdown to next puzzle - only show in daily mode */}
+                {gameMode === 'daily' && (
+                  <div className="text-center p-5 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                    {timeUntilNext === '0:00:00' ? (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">New puzzle available!</p>
+                        <Button
+                          onClick={handleNewGame}
+                          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Load New Puzzle
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Next puzzle in</p>
+                        <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
+                          {timeUntilNext}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Action buttons - different for daily vs practice */}
+                <div className="flex flex-col gap-2">
+                  {gameMode === 'daily' ? (
+                    <>
+                      <Button onClick={handleShare} className="w-full">
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share Result
                       </Button>
-                    </div>
+                      <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
+                        <Trophy className="h-4 w-4 mr-2" />
+                        View Stats
+                      </Button>
+                    </>
                   ) : (
                     <>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Next puzzle in</p>
-                      <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
-                        {timeUntilNext}
-                      </p>
+                      <Button
+                        onClick={handleStartPractice}
+                        disabled={!canStartPracticeGame()}
+                        className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        New Practice Game ({getRemainingPracticeGames()}/5 left)
+                      </Button>
+                      {getRemainingPracticeGames() === 0 && (
+                        <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                          Daily limit reached. Come back tomorrow for more practice!
+                        </p>
+                      )}
+                      <Button onClick={handleBackToDaily} variant="outline" className="w-full">
+                        Back to Daily Challenge
+                      </Button>
                     </>
                   )}
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Button onClick={handleShare} className="w-full">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share Result
-                  </Button>
-                  <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
-                    <Trophy className="h-4 w-4 mr-2" />
-                    View Stats
-                  </Button>
                 </div>
               </div>
             </DialogDescription>
@@ -576,7 +694,7 @@ export default function App() {
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li>Earlier hints are harder, later hints are easier</li>
-                  <li>Clicking hint #4 automatically counts as using 4 hints</li>
+                  <li>Hints reveal in order — unlock the next one by revealing the last</li>
                   <li>Use fewer hints to show your skill!</li>
                 </ul>
               </div>
@@ -594,46 +712,86 @@ export default function App() {
 
       {/* Stats Dialog */}
       <Dialog open={showStats} onOpenChange={setShowStats}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Your Statistics</DialogTitle>
             <DialogDescription className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold">{stats.totalGames}</div>
-                  <div className="text-xs text-gray-600">Games Played</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold">
-                    {stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0}%
+              {/* Daily Stats */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Daily Challenge</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalGames}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Games Played</div>
                   </div>
-                  <div className="text-xs text-gray-600">Win Rate</div>
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                      {stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0}%
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Win Rate</div>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.currentStreak}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Current Streak</div>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.maxStreak}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Max Streak</div>
+                  </div>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold">{stats.currentStreak}</div>
-                  <div className="text-xs text-gray-600">Current Streak</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold">{stats.maxStreak}</div>
-                  <div className="text-xs text-gray-600">Max Streak</div>
+
+                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900 rounded-lg mt-4">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.avgHintsPerGame.toFixed(1)}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">Average Hints Used</div>
                 </div>
               </div>
 
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold">{stats.avgHintsPerGame.toFixed(1)}</div>
-                <div className="text-xs text-gray-600">Average Hints Used</div>
+              {/* Achievements Section */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Achievements</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <div className="text-3xl font-bold text-amber-800 dark:text-amber-200">{stats.noHintStreak}</div>
+                    <div className="text-xs text-amber-700 dark:text-amber-300 font-medium">No Hint Streak</div>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <div className="text-3xl font-bold text-amber-800 dark:text-amber-200">{stats.maxNoHintStreak}</div>
+                    <div className="text-xs text-amber-700 dark:text-amber-300 font-medium">Best No Hint Streak</div>
+                  </div>
+                </div>
               </div>
+
+              {/* Practice Stats */}
+              {stats.practice && stats.practice.totalGames > 0 && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Practice Mode</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-amber-50 dark:bg-amber-900 rounded-lg">
+                      <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.practice.totalGames}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Games Played</div>
+                    </div>
+                    <div className="text-center p-4 bg-amber-50 dark:bg-amber-900 rounded-lg">
+                      <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                        {stats.practice.totalGames > 0 ? Math.round((stats.practice.wins / stats.practice.totalGames) * 100) : 0}%
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Win Rate</div>
+                    </div>
+                    <div className="text-center p-4 bg-amber-50 dark:bg-amber-900 rounded-lg">
+                      <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.practice.avgHintsPerGame.toFixed(1)}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Avg Hints</div>
+                    </div>
+                    <div className="text-center p-4 bg-amber-50 dark:bg-amber-900 rounded-lg">
+                      <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.practice.maxNoHintStreak}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Best Streak</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
       </Dialog>
 
-      {/* Footer - Clean and inspiring with proper spacing */}
-      <footer className="border-t border-gray-200 dark:border-slate-800 py-2 bg-white dark:bg-slate-950">
-        <div className="max-w-4xl mx-auto px-4 text-center text-xs text-gray-500 dark:text-gray-400">
-          <p>Crafted for word lovers everywhere</p>
-        </div>
-      </footer>
     </div>
   );
 }

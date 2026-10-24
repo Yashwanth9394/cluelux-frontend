@@ -37,7 +37,7 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
       
       {isExpanded && (
         <div className="mt-1.5 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-          {hints.map((hint) => {
+          {hints.filter(hint => hint.unlocked).map((hint) => {
             const canReveal = canRevealHint(hints, hint.index);
             const hintCost = hint.index + 1;
 
@@ -75,7 +75,7 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
                       <div className="flex items-center gap-1.5">
                         <Lock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
                         <p className="text-xs text-gray-400">
-                          Hint {hint.index + 1} locked
+                          Reveal Hint {hint.index} first
                         </p>
                       </div>
                     )}

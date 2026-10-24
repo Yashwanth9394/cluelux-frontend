@@ -73,32 +73,32 @@ export function updateHintStates(
 }
 
 /**
- * Check if a hint can be revealed (must be unlocked)
+ * Check if a hint can be revealed: it must be unlocked (enough guesses made),
+ * AND every earlier hint must already be revealed. Hints only open one at a
+ * time, in order - no skipping straight to hint #4.
  */
 export function canRevealHint(
   hintStates: HintState[],
   hintIndex: number
 ): boolean {
-  return hintStates[hintIndex]?.unlocked || false;
+  if (!hintStates[hintIndex]?.unlocked) return false;
+  return hintStates.slice(0, hintIndex).every(hint => hint.revealed);
 }
 
 /**
- * Reveal a hint and automatically mark all previous hints as revealed
- * This creates a "cost" system: clicking hint #4 counts as using 4 hints total
+ * Reveal a single hint. Since canRevealHint already requires every earlier
+ * hint to be revealed first, this never needs to cascade.
  */
 export function revealHint(
   hintStates: HintState[],
   hintIndex: number
 ): HintState[] {
-  // Check if hint can be revealed (is it unlocked?)
   if (!canRevealHint(hintStates, hintIndex)) {
-    return hintStates; // Return unchanged if not unlocked
+    return hintStates; // Not revealable yet - unchanged
   }
 
-  // Reveal the clicked hint AND all previous hints
-  // This rewards skill: clicking hint #4 = 4 hints used in stats
   return hintStates.map((hint, index) =>
-    index <= hintIndex ? { ...hint, revealed: true } : hint
+    index === hintIndex ? { ...hint, revealed: true } : hint
   );
 }
 

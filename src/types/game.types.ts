@@ -5,6 +5,7 @@
 export type TileState = 'empty' | 'filled' | 'correct' | 'present' | 'absent';
 export type GameStatus = 'playing' | 'won' | 'lost';
 export type KeyState = 'unused' | 'correct' | 'present' | 'absent';
+export type GameMode = 'daily' | 'practice';
 
 export interface MasterWord {
   id: string;
@@ -35,6 +36,7 @@ export interface DailyChallenge {
 export interface GameState {
   date: string;
   gameNumber: number;
+  gameMode: GameMode;
   guesses: string[];
   evaluations: TileState[][];
   hintsRevealed: number;
@@ -46,6 +48,7 @@ export interface GameState {
 }
 
 export interface GameStats {
+  // Daily game stats
   totalGames: number;
   wins: number;
   losses: number;
@@ -55,6 +58,24 @@ export interface GameStats {
   avgHintsPerGame: number;
   winDistribution: Record<number, number>;
   lastPlayed: string;
+
+  // No hint streak tracking (daily games only)
+  noHintStreak: number;
+  maxNoHintStreak: number;
+
+  // Practice mode stats (completely separate)
+  practice?: {
+    totalGames: number;
+    wins: number;
+    losses: number;
+    hintsUsed: number;
+    avgHintsPerGame: number;
+    noHintStreak: number;
+    maxNoHintStreak: number;
+    // Daily practice limit tracking
+    lastPracticeDate: string;
+    gamesPlayedToday: number;
+  };
 }
 
 export interface HintState {

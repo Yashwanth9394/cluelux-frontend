@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { GameTile } from './GameTile';
+import { canRevealHint } from '../lib/hintManager';
 import type { HintState } from '../types/game.types';
 
 type TileState = 'empty' | 'filled' | 'correct' | 'present' | 'absent';
@@ -45,8 +46,8 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
 
   const handleHintClick = (hintIndex: number) => {
     const hint = hints[hintIndex];
-    // Only show popup if hint is unlocked
-    if (hint && hint.unlocked) {
+    // Only show popup if this hint is actually revealable (unlocked AND every earlier hint already revealed)
+    if (hint && canRevealHint(hints, hintIndex)) {
       // Mark hint as revealed when clicked
       if (!hint.revealed && onRevealHint) {
         onRevealHint(hintIndex);
@@ -85,34 +86,37 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
             // Map remaining rows to hints: row 1 -> hint 0, row 2 -> hint 1, etc.
             const hintIndex = rowIndex - 1;
             const hint = rowIndex > 0 ? hints[hintIndex] : null;
-            const isLocked = !hint || !hint.unlocked;
+            const isUnlocked = !!hint?.unlocked;
             const isRevealed = hint?.revealed;
-            const isUnlockedNotViewed = hint?.unlocked && !hint?.revealed;
+            const canReveal = hint ? canRevealHint(hints, hintIndex) : false;
+            // Unlocked but waiting on an earlier hint being revealed first
+            const isBlockedBySequence = isUnlocked && !isRevealed && !canReveal;
+            const isUnlockedNotViewed = canReveal && !isRevealed;
             const shouldShake = shakeRow === rowIndex;
 
             return (
               <div key={rowIndex} className="flex flex-col gap-1">
-                {/* Minimal indicator - skip for first row */}
-                {rowIndex > 0 && (
+                {/* Minimal indicator - skip for first row, and skip entirely until this hint unlocks */}
+                {rowIndex > 0 && isUnlocked && (
                   <button
                     onClick={() => handleHintClick(hintIndex)}
                     className={`
                       relative h-1 rounded-full transition-all duration-300 mx-auto
-                      ${isLocked
-                        ? 'w-2 bg-slate-300 dark:bg-slate-700 opacity-20 cursor-not-allowed'
+                      ${isBlockedBySequence
+                        ? 'w-2 bg-slate-300 dark:bg-slate-700 opacity-30 cursor-not-allowed'
                         : isUnlockedNotViewed
                         ? 'w-8 bg-amber-500 cursor-pointer hover:w-9 hover:shadow-[0_0_8px_rgba(251,191,36,0.5)] animate-hint-breathe'
                         : 'w-3 bg-blue-500 opacity-60 cursor-pointer hover:scale-105 hover:opacity-70 transition-transform'
                       }
                     `}
                     aria-label={
-                      isLocked
-                        ? `Hint ${hintIndex + 1} locked`
+                      isBlockedBySequence
+                        ? `Reveal Hint ${hintIndex} first`
                         : isRevealed
                         ? `Hint ${hintIndex + 1} viewed`
                         : `Hint ${hintIndex + 1} available`
                     }
-                    disabled={isLocked}
+                    disabled={isBlockedBySequence}
                   />
                 )}
                 

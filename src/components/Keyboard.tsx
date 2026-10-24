@@ -11,6 +11,8 @@ interface KeyboardProps {
   onEnter: () => void;
   keyStates: Record<string, KeyState>;
   disabled?: boolean;
+  currentGuessLength: number;
+  wordLength: number;
 }
 
 const KEYBOARD_ROWS = [
@@ -19,7 +21,9 @@ const KEYBOARD_ROWS = [
   ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'BACK'],
 ];
 
-export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled = false }: KeyboardProps) {
+export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnter, keyStates, disabled = false, currentGuessLength, wordLength }: KeyboardProps) {
+  const isWordComplete = currentGuessLength === wordLength;
+  const hasAnyLetter = currentGuessLength > 0;
   // Memoize key color calculation with glassmorphic gradients
   const getKeyColor = useCallback((key: string) => {
     const state = keyStates[key.toUpperCase()];
@@ -56,10 +60,17 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
             const isSpecial = key === 'ENTER' || key === 'BACK';
             const state = keyStates[key.toUpperCase()];
 
+            // ENTER only makes sense once every box in the row is filled;
+            // BACK/clear only makes sense once there's something to delete.
+            const keyDisabled =
+              disabled ||
+              (key === 'ENTER' && !isWordComplete) ||
+              (key === 'BACK' && !hasAnyLetter);
+
             return (
               <motion.div
                 key={key}
-                whileTap={!disabled ? {
+                whileTap={!keyDisabled ? {
                   scale: 0.92,
                 } : {}}
                 transition={{
@@ -70,14 +81,16 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
               >
                 <Button
                   onClick={() => handleClick(key)}
-                  disabled={disabled}
+                  disabled={keyDisabled}
                   className={`
                     h-14 sm:h-16 border-2
                     ${isSpecial ? 'px-3 min-w-[65px] sm:min-w-[75px] text-xs sm:text-sm font-extrabold' : 'w-9 sm:w-11 p-0 text-base sm:text-lg font-bold'}
-                    ${getKeyColor(key)}
+                    ${key === 'ENTER' && isWordComplete && !disabled
+                      ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 text-gray-800 dark:text-gray-200 hover:bg-amber-100 dark:hover:bg-amber-950/50'
+                      : getKeyColor(key)}
                     rounded-lg sm:rounded-xl
                     transition-all duration-200
-                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+                    ${keyDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
                     ${state !== 'unused' ? '[box-shadow:inset_0_-2px_0_rgba(0,0,0,0.15)]' : ''}
                     backdrop-blur-sm
                     relative overflow-hidden
