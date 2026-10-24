@@ -394,7 +394,6 @@ export default function App() {
       try {
         await navigator.share({
           text: text,
-          title: 'ClueLux Results'
         });
         // No toast on successful share - native dialog is enough feedback
         return;
