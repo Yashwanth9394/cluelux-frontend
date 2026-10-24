@@ -46,7 +46,8 @@ module.exports = {
         'hint-breathe': 'hint-breathe 2.5s ease-in-out infinite',
       },
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['Manrope', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
       },
     },
   },

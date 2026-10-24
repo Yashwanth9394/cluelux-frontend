@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Lock, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { canRevealHint } from '../lib/hintManager';
@@ -28,11 +27,9 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
             {unlockedCount > 0 && ` (${unlockedCount} available)`}
           </span>
         </div>
-        {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-gray-500" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
-        )}
+        <span className="text-gray-500 text-xs leading-none" aria-hidden="true">
+          {isExpanded ? '▲' : '▼'}
+        </span>
       </button>
       
       {isExpanded && (
@@ -60,7 +57,7 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
                     ) : canReveal ? (
                       <div className="flex items-center justify-between w-full">
                         <div className="flex items-center gap-1.5">
-                          <Eye className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-500 flex-shrink-0 animate-pulse" />
+                          <span className="text-yellow-600 dark:text-yellow-500 text-xs leading-none animate-pulse" aria-hidden="true">●</span>
                           <p className="text-xs font-medium text-yellow-700 dark:text-yellow-400">
                             Reveal Hint {hint.index + 1}
                           </p>
@@ -73,7 +70,7 @@ export function HintDisplay({ hints, onRevealHint }: HintDisplayProps) {
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5">
-                        <Lock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                        <span className="text-gray-400 text-xs leading-none" aria-hidden="true">🔒</span>
                         <p className="text-xs text-gray-400">
                           Reveal Hint {hint.index} first
                         </p>

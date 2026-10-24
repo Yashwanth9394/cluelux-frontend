@@ -68,7 +68,7 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
           >
             <div className="text-center space-y-6">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="font-display text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   This is ClueLux
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
@@ -94,15 +94,15 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
               {/* Color legend */}
               <div className="space-y-2 text-left bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-emerald-500 rounded"></div>
+                  <div className="w-8 h-8 bg-[#129873] rounded"></div>
                   <span className="text-sm text-gray-700 dark:text-gray-300">Right spot</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-amber-500 rounded"></div>
+                  <div className="w-8 h-8 bg-[#CA8A2E] rounded"></div>
                   <span className="text-sm text-gray-700 dark:text-gray-300">Wrong spot</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-slate-400 dark:bg-slate-600 rounded"></div>
+                  <div className="w-8 h-8 bg-[#716C66] dark:bg-[#4A4541] rounded"></div>
                   <span className="text-sm text-gray-700 dark:text-gray-300">Not in word</span>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
             <div className="text-center space-y-6">
               <div>
                 <div className="text-5xl mb-3">💡</div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="font-display text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   Stuck? Use Hints
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">

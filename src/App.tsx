@@ -7,7 +7,6 @@ import { Button } from './components/ui/button';
 import { Alert, AlertDescription } from './components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './components/ui/dialog';
 import { Toaster } from './components/ui/sonner';
-import { RotateCcw, Trophy, XCircle, HelpCircle, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Import our game engines
@@ -425,7 +424,7 @@ export default function App() {
         {/* Header */}
         <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
               ClueLux
             </h1>
           </div>
@@ -461,7 +460,7 @@ export default function App() {
               instead of pushing the icon buttons off-screen at large text sizes */}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
                 ClueLux
               </h1>
               {gameMode === 'daily' ? (
@@ -483,17 +482,19 @@ export default function App() {
               variant="ghost"
               size="icon"
               onClick={() => setShowHelp(true)}
-              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-9 h-9"
+              aria-label="How to play"
+              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-9 h-9 text-base"
             >
-              <HelpCircle className="h-4 w-4" />
+              <span aria-hidden="true">❓</span>
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowStats(true)}
-              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-9 h-9"
+              aria-label="Stats"
+              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-9 h-9 text-base"
             >
-              <Trophy className="h-4 w-4" />
+              <span aria-hidden="true">🏆</span>
             </Button>
           </div>
         </div>
@@ -581,13 +582,13 @@ export default function App() {
               {gameStatus === 'won' ? (
                 <div className="flex flex-col items-center gap-3 py-2">
                   <span className="text-6xl">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).emoji}</span>
-                  <span className="text-3xl font-bold tracking-tight">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).title}</span>
+                  <span className="font-display text-3xl font-bold tracking-tight">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).title}</span>
                   <span className="text-base text-gray-600 dark:text-gray-400 font-normal">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).subtitle}</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2">
                   <span className="text-4xl">{getDiscoveryMessage(challenge.answer, guesses).emoji}</span>
-                  <span className="text-2xl">{getDiscoveryMessage(challenge.answer, guesses).title}</span>
+                  <span className="font-display text-2xl">{getDiscoveryMessage(challenge.answer, guesses).title}</span>
                 </div>
               )}
             </DialogTitle>
@@ -630,7 +631,7 @@ export default function App() {
                           onClick={handleNewGame}
                           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                         >
-                          <RotateCcw className="h-4 w-4 mr-2" />
+                          <span className="mr-2" aria-hidden="true">↻</span>
                           Load New Puzzle
                         </Button>
                       </div>
@@ -650,11 +651,11 @@ export default function App() {
                   {gameMode === 'daily' ? (
                     <>
                       <Button onClick={handleShare} className="w-full">
-                        <Share2 className="h-4 w-4 mr-2" />
+                        <span className="mr-2" aria-hidden="true">📤</span>
                         Share Result
                       </Button>
                       <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
-                        <Trophy className="h-4 w-4 mr-2" />
+                        <span className="mr-2" aria-hidden="true">🏆</span>
                         View Stats
                       </Button>
                     </>
@@ -665,7 +666,7 @@ export default function App() {
                         disabled={!canStartPracticeGame()}
                         className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <RotateCcw className="h-4 w-4 mr-2" />
+                        <span className="mr-2" aria-hidden="true">↻</span>
                         New Practice Game ({getRemainingPracticeGames()}/5 left)
                       </Button>
                       {getRemainingPracticeGames() === 0 && (
@@ -812,7 +813,7 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-gray-200 dark:border-slate-800 py-2 bg-white dark:bg-slate-950">
         <div className="max-w-4xl mx-auto px-4 text-center text-xs text-gray-500 dark:text-gray-400">
-          <p>Crafted for word lovers everywhere</p>
+          <p>Crafted for word lovers</p>
         </div>
       </footer>
 

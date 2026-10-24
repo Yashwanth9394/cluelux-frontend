@@ -22,11 +22,11 @@ export const GameTile = memo(function GameTile({ letter, state, position, delay 
   const getBackgroundColor = () => {
     switch (state) {
       case 'correct':
-        return 'bg-emerald-500';
+        return 'bg-[#129873]';
       case 'present':
-        return 'bg-amber-500';
+        return 'bg-[#CA8A2E]';
       case 'absent':
-        return 'bg-slate-400 dark:bg-slate-600';
+        return 'bg-[#716C66] dark:bg-[#4A4541]';
       case 'filled':
         return 'bg-white dark:bg-slate-800 border-gray-400 dark:border-slate-600';
       default:
