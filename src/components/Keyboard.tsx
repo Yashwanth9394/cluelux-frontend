@@ -28,14 +28,14 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
     const state = keyStates[key.toUpperCase()];
     switch (state) {
       case 'correct':
-        // Jade green for correct letters - matches GameTile's custom palette
-        return 'bg-gradient-to-br from-[#15A880] via-[#129873] to-[#0D7A5C] hover:from-[#18B88D] hover:via-[#15A880] hover:to-[#0F8A68] text-white border-[#0D7A5C]/50 opacity-90 hover:opacity-100';
+        // Green for correct letters
+        return 'bg-gradient-to-br from-green-500 via-green-600 to-green-700 hover:from-green-600 hover:via-green-700 hover:to-green-800 text-white border-green-600/50 opacity-90 hover:opacity-100';
       case 'present':
-        // Antique gold for letters in wrong position - matches GameTile's custom palette
-        return 'bg-gradient-to-br from-[#D99D44] via-[#CA8A2E] to-[#A8701F] hover:from-[#E0AC5B] hover:via-[#D99D44] hover:to-[#B87C25] text-white border-[#A8701F]/50 opacity-90 hover:opacity-100';
+        // Orange for letters in wrong position
+        return 'bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 text-white border-orange-600/50 opacity-90 hover:opacity-100';
       case 'absent':
-        // Warm taupe for absent letters - matches GameTile's custom palette
-        return 'bg-gradient-to-br from-[#8A857D] via-[#716C66] to-[#58534E] hover:from-[#97928A] hover:via-[#8A857D] hover:to-[#625D57] text-white border-[#58534E]/50 opacity-70 hover:opacity-80';
+        // Grey for absent letters
+        return 'bg-gradient-to-br from-slate-400 via-slate-500 to-slate-600 hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 text-white border-slate-600/50 opacity-70 hover:opacity-80';
       default:
         return 'glass-subtle hover:glass-card text-gray-800 dark:text-gray-200 border-gray-300/50 dark:border-gray-600/50 hover:border-indigo-400/50 hover:shadow-[0_4px_16px_rgba(99,102,241,0.2)]';
     }

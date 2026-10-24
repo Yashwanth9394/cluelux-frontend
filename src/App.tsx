@@ -424,7 +424,7 @@ export default function App() {
         {/* Header */}
         <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
-            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
               ClueLux
             </h1>
           </div>
@@ -460,7 +460,7 @@ export default function App() {
               instead of pushing the icon buttons off-screen at large text sizes */}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
                 ClueLux
               </h1>
               {gameMode === 'daily' ? (
@@ -582,13 +582,13 @@ export default function App() {
               {gameStatus === 'won' ? (
                 <div className="flex flex-col items-center gap-3 py-2">
                   <span className="text-6xl">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).emoji}</span>
-                  <span className="font-display text-3xl font-bold tracking-tight">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).title}</span>
+                  <span className="text-3xl font-bold tracking-tight">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).title}</span>
                   <span className="text-base text-gray-600 dark:text-gray-400 font-normal">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).subtitle}</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2">
                   <span className="text-4xl">{getDiscoveryMessage(challenge.answer, guesses).emoji}</span>
-                  <span className="font-display text-2xl">{getDiscoveryMessage(challenge.answer, guesses).title}</span>
+                  <span className="text-2xl">{getDiscoveryMessage(challenge.answer, guesses).title}</span>
                 </div>
               )}
             </DialogTitle>
