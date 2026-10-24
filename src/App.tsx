@@ -373,41 +373,115 @@ export default function App() {
     window.location.reload();
   };
 
-  const handleShare = async () => {
-    const emoji = evaluations.map(row =>
-      row.map(state =>
-        state === 'correct' ? '🟢😊' :
-        state === 'present' ? '😐' : '⚪'
-      ).join('')
-    ).join('\n');
+  // Plain-text emoji can't be recolored (fixed per glyph by the viewer's font/
+  // platform, not by us) - a real green smiley needs an actual drawn image.
+  // Renders the result grid as a PNG: light-green circle+smile for correct,
+  // gray circle+straight-face for present, plain pale circle for absent.
+  const renderResultImage = (): Promise<Blob | null> => {
+    const cell = 48;
+    const gap = 10;
+    const padding = 20;
+    const rows = evaluations.length;
+    const cols = challenge.wordLength;
 
+    const canvas = document.createElement('canvas');
+    canvas.width = cols * cell + (cols - 1) * gap + padding * 2;
+    canvas.height = rows * cell + (rows - 1) * gap + padding * 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return Promise.resolve(null);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    evaluations.forEach((row, r) => {
+      row.forEach((state, c) => {
+        const cx = padding + c * (cell + gap) + cell / 2;
+        const cy = padding + r * (cell + gap) + cell / 2;
+        const radius = cell / 2;
+
+        const fill = state === 'correct' ? '#86efac' : state === 'present' ? '#e5e7eb' : '#f3f4f6';
+        const ink = state === 'correct' ? '#166534' : '#4b5563';
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fillStyle = fill;
+        ctx.fill();
+
+        if (state === 'absent') return; // plain circle, no face
+
+        const eyeOffsetX = radius * 0.32;
+        const eyeOffsetY = radius * 0.18;
+        const eyeRadius = radius * 0.09;
+        ctx.fillStyle = ink;
+        [-1, 1].forEach(side => {
+          ctx.beginPath();
+          ctx.arc(cx + side * eyeOffsetX, cy - eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = radius * 0.1;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        if (state === 'correct') {
+          // Smile: downward curve
+          ctx.arc(cx, cy + radius * 0.05, radius * 0.4, Math.PI * 0.15, Math.PI * 0.85);
+        } else {
+          // Present: straight line
+          ctx.moveTo(cx - radius * 0.32, cy + radius * 0.3);
+          ctx.lineTo(cx + radius * 0.32, cy + radius * 0.3);
+        }
+        ctx.stroke();
+      });
+    });
+
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  };
+
+  const handleShare = async () => {
     // Calculate hints used
     const totalHintsUsed = getRevealedHintsCount(hintStates);
 
     // Show hint count with thunder symbol
     const hintGlyph = totalHintsUsed === 0 ? ' ⚡' : ` · ${totalHintsUsed}⚡`;
 
-    const text = `ClueLux #${challenge.gameNumber}${hintGlyph}\n\n${emoji}`;
+    const text = `ClueLux #${challenge.gameNumber}${hintGlyph}`;
+    const blob = await renderResultImage();
 
-    // Try native share API first (works on mobile)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          text: text,
-        });
-        // No toast on successful share - native dialog is enough feedback
-        return;
-      } catch (err: any) {
-        // User cancelled or share failed - silently fall back to clipboard
-        if (err.name === 'AbortError') {
-          return; // User cancelled, don't show any error
+    if (blob) {
+      const file = new File([blob], 'cluelux-result.png', { type: 'image/png' });
+
+      // Try native share with the image first (works on mobile)
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], text });
+          return; // Native dialog is enough feedback
+        } catch (err: any) {
+          if (err.name === 'AbortError') return; // User cancelled
+        }
+      }
+
+      // Desktop fallback: copy the image itself to the clipboard
+      if (navigator.clipboard && 'write' in navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          toast.success('Result image copied to clipboard');
+          return;
+        } catch {
+          // Fall through to text fallback below
         }
       }
     }
 
-    // Fallback to clipboard
+    // Last-resort fallback: plain emoji text (e.g. very old browsers)
+    const emoji = evaluations.map(row =>
+      row.map(state =>
+        state === 'correct' ? '🟢😊' :
+        state === 'present' ? '😐' : '⚪'
+      ).join('')
+    ).join('\n');
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(`${text}\n\n${emoji}`);
       toast.success('Copied to clipboard');
     } catch {
       toast.error('Failed to copy');
