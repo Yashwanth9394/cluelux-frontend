@@ -28,11 +28,11 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
     const state = keyStates[key.toUpperCase()];
     switch (state) {
       case 'correct':
-        // Green for correct letters
-        return 'bg-gradient-to-br from-green-500 via-green-600 to-green-700 hover:from-green-600 hover:via-green-700 hover:to-green-800 text-white border-green-600/50 opacity-90 hover:opacity-100';
+        // Emerald for correct letters - matches GameTile's bg-emerald-500
+        return 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 text-white border-emerald-600/50 opacity-90 hover:opacity-100';
       case 'present':
-        // Orange for letters in wrong position
-        return 'bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 text-white border-orange-600/50 opacity-90 hover:opacity-100';
+        // Amber for letters in wrong position - matches GameTile's bg-amber-500
+        return 'bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-white border-amber-600/50 opacity-90 hover:opacity-100';
       case 'absent':
         // Grey for absent letters
         return 'bg-gradient-to-br from-slate-400 via-slate-500 to-slate-600 hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 text-white border-slate-600/50 opacity-70 hover:opacity-80';
