@@ -460,7 +460,7 @@ export default function App() {
     return <Dashboard onBack={() => { window.location.hash = ''; changeView('daily'); }} adminCode="cluelux-2026-ops" />;
   }
 
-  if (ARCHIVE_ENABLED && view === 'archive') {
+  if (view === 'archive') {
     return <ArchiveExperience onExit={() => changeView('daily')} />;
   }
 

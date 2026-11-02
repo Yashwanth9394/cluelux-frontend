@@ -16,20 +16,15 @@ type Screen =
 
 /** Everything behind "Cluelux archive": access, the hub, and playing one puzzle. */
 export function ArchiveExperience({ onExit }: ArchiveExperienceProps) {
-  const [screen, setScreen] = useState<Screen>(() => (getAccessTier() === 'none' ? { name: 'gate' } : { name: 'hub' }));
+  const [screen, setScreen] = useState<Screen>({ name: 'hub' });
 
   if (screen.name === 'play') {
     return <PuzzleRunner puzzle={screen.puzzle} title={screen.title} onExit={() => setScreen({ name: 'hub' })} />;
   }
 
-  const tier = getAccessTier();
-  if (screen.name === 'gate' || tier === 'none') {
-    return <AccessGate onGranted={() => setScreen({ name: 'hub' })} onBack={onExit} />;
-  }
-
   return (
     <ArchiveHub
-      tier={tier}
+      tier="test"
       onPlay={(puzzle, title) => setScreen({ name: 'play', puzzle, title })}
       onSignOut={() => setScreen({ name: 'gate' })}
       onBack={onExit}
