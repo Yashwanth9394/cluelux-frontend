@@ -106,6 +106,19 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             )}
           </div>
         )}
+
+        {/* Divider */}
+        <div className="h-px bg-gray-200 dark:bg-slate-700" />
+
+        {/* Feedback & social */}
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <a href="mailto:hello@cluelux.com" className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+            Feedback
+          </a>
+          <a href="https://instagram.com/playcluelux" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+            @playcluelux
+          </a>
+        </div>
       </div>
     </>
   );
