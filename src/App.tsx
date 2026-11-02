@@ -30,6 +30,7 @@ import { shareWithImage } from './lib/shareCard';
 import { RecapCard } from './components/RecapCard';
 import { SettingsDialog } from './components/SettingsDialog';
 import { ArchiveExperience } from './components/archive/ArchiveExperience';
+import { Dashboard } from './components/Dashboard';
 import { VocabExperience } from './components/VocabExperience';
 import { ReviseExperience } from './components/ReviseExperience';
 import { getAccessTier } from './lib/archiveStore';
@@ -100,7 +101,8 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [view, setView] = useState<'daily' | 'archive' | 'vocab' | 'revise'>(() => {
+  const [view, setView] = useState<'daily' | 'archive' | 'vocab' | 'revise' | 'dashboard'>(() => {
+    if (window.location.hash === '#ops-7x9k2m') return 'dashboard';
     const saved = loadActiveView();
     if (saved && (saved === 'vocab' || saved === 'revise' || saved === 'archive')) {
       // Only restore non-daily view if daily has been played
@@ -452,6 +454,10 @@ export default function App() {
         </main>
       </div>
     );
+  }
+
+  if (view === 'dashboard') {
+    return <Dashboard onBack={() => { window.location.hash = ''; changeView('daily'); }} adminCode="cluelux-2026-ops" />;
   }
 
   if (ARCHIVE_ENABLED && view === 'archive') {
@@ -825,9 +831,14 @@ export default function App() {
       </Dialog>
 
       {/* Footer */}
-      <footer className="py-2 bg-white dark:bg-slate-950">
-        <div className="max-w-4xl mx-auto px-4 text-center text-[11px] text-gray-400 dark:text-slate-600">
+      <footer className="py-3 bg-white dark:bg-slate-950">
+        <div className="max-w-4xl mx-auto px-4 text-center text-[11px] text-gray-400 dark:text-slate-600 space-y-1">
           <p>#{challenge.gameNumber} · {challenge.date}</p>
+          <p>
+            <a href="mailto:cluelux@gmail.com" className="hover:text-gray-600 dark:hover:text-slate-400 transition-colors">Feedback</a>
+            {' · '}
+            <a href="https://instagram.com/cluelux" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 dark:hover:text-slate-400 transition-colors">Instagram</a>
+          </p>
         </div>
       </footer>
 
