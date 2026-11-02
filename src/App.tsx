@@ -32,6 +32,7 @@ import { RecapCard } from './components/RecapCard';
 import { SettingsDialog } from './components/SettingsDialog';
 import { ArchiveExperience } from './components/archive/ArchiveExperience';
 import { Dashboard } from './components/Dashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { VocabExperience } from './components/VocabExperience';
 import { ReviseExperience } from './components/ReviseExperience';
 import { getAccessTier } from './lib/archiveStore';
@@ -460,7 +461,11 @@ export default function App() {
   }
 
   if (view === 'dashboard') {
-    return <Dashboard onBack={() => { window.location.hash = ''; changeView('daily'); }} adminCode="cluelux-2026-ops" />;
+    return (
+      <ErrorBoundary label="Dashboard failed to load">
+        <Dashboard onBack={() => { window.location.hash = ''; changeView('daily'); }} adminCode="cluelux-2026-ops" />
+      </ErrorBoundary>
+    );
   }
 
   if (view === 'archive') {
