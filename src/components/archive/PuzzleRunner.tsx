@@ -14,6 +14,7 @@ import {
 } from '../../lib/gameEngine';
 import { initializeHints, updateHintStates, revealHint, getRevealedHintsCount } from '../../lib/hintManager';
 import { loadPuzzle, savePuzzle } from '../../lib/archiveStore';
+import { recordPlay } from '../../services/api';
 import type { PuzzleData } from '../../services/archiveApi';
 import type { TileState, KeyState, HintState } from '../../types/game.types';
 
@@ -101,9 +102,13 @@ export function PuzzleRunner({ puzzle, title, onExit }: PuzzleRunnerProps) {
     setHintsUsedPerGuess(newPerGuess);
     setKeyStates(updateKeyboardState(keyStates, currentGuess, evaluation));
 
+    const mode = puzzle.kind === 'archive' ? 'archive' : 'random';
+    const recordDate = puzzle.kind === 'archive' ? puzzle.label : null;
+
     if (isWinningGuess(evaluation)) {
       setStatus('won');
       persist({ guesses: newGuesses, evaluations: newEvaluations, hints: hintStates, perGuess: newPerGuess, status: 'won' });
+      recordPlay(recordDate, true, newGuesses.length, mode);
       return;
     }
 
@@ -119,6 +124,7 @@ export function PuzzleRunner({ puzzle, title, onExit }: PuzzleRunnerProps) {
       perGuess: newPerGuess,
       status: finished ? 'lost' : 'playing',
     });
+    if (finished) recordPlay(recordDate, false, newGuesses.length, mode);
   };
 
   const handleRevealHint = (index: number) => {
