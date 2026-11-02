@@ -104,6 +104,8 @@ export function loadStats(): GameStats {
         ...stats,
         noHintStreak: stats.noHintStreak ?? 0,
         maxNoHintStreak: stats.maxNoHintStreak ?? 0,
+        totalGuesses: stats.totalGuesses ?? 0,
+        avgGuessesPerGame: stats.avgGuessesPerGame ?? 0,
         practice,
       };
     }
@@ -120,6 +122,8 @@ export function loadStats(): GameStats {
     maxStreak: 0,
     hintsUsed: 0,
     avgHintsPerGame: 0,
+    totalGuesses: 0,
+    avgGuessesPerGame: 0,
     winDistribution: {},
     lastPlayed: '',
     noHintStreak: 0,
@@ -194,6 +198,7 @@ export function updateStats(
   // DAILY MODE: Update daily stats
   const newHintsUsed = previousStats.hintsUsed + gameState.hintsRevealed;
   const newTotalGames = previousStats.totalGames + 1;
+  const newTotalGuesses = (previousStats.totalGuesses || 0) + attemptsUsed;
   const newNoHintStreak = isWin && usedNoHints
     ? previousStats.noHintStreak + 1
     : 0;
@@ -210,6 +215,8 @@ export function updateStats(
     ),
     hintsUsed: newHintsUsed,
     avgHintsPerGame: newHintsUsed / newTotalGames,
+    totalGuesses: newTotalGuesses,
+    avgGuessesPerGame: newTotalGuesses / newTotalGames,
     winDistribution: {
       ...previousStats.winDistribution,
       [attemptsUsed]: (previousStats.winDistribution[attemptsUsed] || 0) + (isWin ? 1 : 0),

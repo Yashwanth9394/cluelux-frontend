@@ -9,8 +9,8 @@ interface FirstTimeExperienceProps {
   onComplete: () => void;
 }
 
-const TUTORIAL_VIEWS_KEY = 'tutorialViewCount';
-const MAX_TUTORIAL_VIEWS = 3;
+const TUTORIAL_DAYS_KEY = 'tutorialDaysSeen';
+const MAX_TUTORIAL_DAYS = 3;
 
 export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
   const [step, setStep] = useState(1);
@@ -48,9 +48,14 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
     if (step === 1) {
       setStep(2);
     } else {
-      // Count this view - tutorial stops showing after MAX_TUTORIAL_VIEWS
-      const seen = Number(localStorage.getItem(TUTORIAL_VIEWS_KEY) || '0');
-      localStorage.setItem(TUTORIAL_VIEWS_KEY, String(seen + 1));
+      // Record today as a day the tutorial was seen
+      try {
+        const raw = localStorage.getItem(TUTORIAL_DAYS_KEY);
+        const days: string[] = raw ? JSON.parse(raw) : [];
+        const today = new Date().toISOString().slice(0, 10);
+        if (!days.includes(today)) days.push(today);
+        localStorage.setItem(TUTORIAL_DAYS_KEY, JSON.stringify(days));
+      } catch { /* ignore */ }
       onComplete();
     }
   };
@@ -68,8 +73,8 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
           >
             <div className="text-center space-y-6">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  This is ClueLux
+                <h2 className="text-3xl font-bold mb-2">
+                  <span className="text-gray-500 dark:text-slate-400">This is Clue</span><span className="bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-500 bg-clip-text text-transparent">Lux</span>
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
                   Watch how it works
@@ -160,7 +165,7 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
               {/* Hint cost explanation */}
               <div className="bg-indigo-50 dark:bg-indigo-950/30 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800">
                 <p className="text-sm text-indigo-900 dark:text-indigo-200 font-medium mb-1">
-                  💎 Skill Reward System
+                  ⚡ Hint System
                 </p>
                 <p className="text-xs text-indigo-700 dark:text-indigo-300">
                   Earlier hints are harder. Hints reveal one at a time, in order. Use fewer to show skill!
@@ -178,9 +183,15 @@ export function FirstTimeExperience({ onComplete }: FirstTimeExperienceProps) {
   );
 }
 
-// Export utility to check if tutorial should show - true for the first
-// MAX_TUTORIAL_VIEWS times a player completes it, never again after that.
+// Export utility to check if tutorial should show — true until the player
+// has seen it on MAX_TUTORIAL_DAYS distinct days (not page loads).
 export function shouldShowTutorial(): boolean {
-  const seen = Number(localStorage.getItem(TUTORIAL_VIEWS_KEY) || '0');
-  return seen < MAX_TUTORIAL_VIEWS;
+  try {
+    const raw = localStorage.getItem(TUTORIAL_DAYS_KEY);
+    if (!raw) return true;
+    const days: string[] = JSON.parse(raw);
+    return days.length < MAX_TUTORIAL_DAYS;
+  } catch {
+    return true;
+  }
 }

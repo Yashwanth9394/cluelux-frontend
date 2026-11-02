@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 // Import our game engines
 import { evaluateGuess, isWinningGuess, getMaxAttempts, updateKeyboardState, initializeKeyboardState, validateGuessInput } from './lib/gameEngine';
 import { initializeHints, updateHintStates, revealHint, getRevealedHintsCount } from './lib/hintManager';
-import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, updateStats, isCurrentGameToday } from './lib/localStorage';
+import { saveGameState, loadGameState, clearGameState, loadStats, saveStats, updateStats, isCurrentGameToday, hasTodayBeenPlayed } from './lib/localStorage';
 
 // Import types
 import type { TileState, KeyState, GameStatus, GameState, HintState, GameMode } from './types/game.types';
@@ -25,6 +25,28 @@ import { fetchDailyWord, formatDailyWordForGame, recordPlay } from './services/a
 
 // Fallback data in case API is not available
 import todayData from './data/today.json';
+
+import { shareWithImage } from './lib/shareCard';
+import { RecapCard } from './components/RecapCard';
+import { SettingsDialog } from './components/SettingsDialog';
+import { ArchiveExperience } from './components/archive/ArchiveExperience';
+import { VocabExperience } from './components/VocabExperience';
+import { ReviseExperience } from './components/ReviseExperience';
+import { getAccessTier } from './lib/archiveStore';
+import { saveActiveView, loadActiveView } from './lib/vocabStore';
+import { trackGuess, trackHintRevealed, trackGameEnd, trackModeSwitch, trackShare, trackDropOff } from './lib/analytics';
+
+// The archive and special puzzles stay dark unless this is explicitly on.
+const ARCHIVE_ENABLED = import.meta.env.VITE_FEATURE_ARCHIVE === 'true';
+
+function GearIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
 
 // Small monochrome icons (stroke = currentColor, like lucide-react's icons
 // were) so these render in the surrounding text color instead of a colored
@@ -60,7 +82,12 @@ export default function App() {
   const MAX_GUESSES = getMaxAttempts(challenge.wordLength);
 
   // Tutorial state
-  const [showTutorial, setShowTutorial] = useState(shouldShowTutorial());
+  const [showTutorial, setShowTutorial] = useState(() => {
+    if (!shouldShowTutorial()) return false;
+    // Don't show tutorial if the user already finished today's puzzle
+    const saved = loadGameState();
+    return !saved || saved.gameStatus === 'playing';
+  });
 
   // Game state
   const [guesses, setGuesses] = useState<string[]>([]);
@@ -72,6 +99,23 @@ export default function App() {
   const [showResult, setShowResult] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [view, setView] = useState<'daily' | 'archive' | 'vocab' | 'revise'>(() => {
+    const saved = loadActiveView();
+    if (saved && (saved === 'vocab' || saved === 'revise' || saved === 'archive')) {
+      // Only restore non-daily view if daily has been played
+      const dailyState = loadGameState();
+      const todayET = new Date().toLocaleString('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
+      const [month, day, year] = todayET.split('/');
+      const todayDate = `${year}-${month}-${day}`;
+      if (dailyState && dailyState.date === todayDate && dailyState.gameStatus !== 'playing') {
+        return saved as 'vocab' | 'revise' | 'archive';
+      }
+    }
+    return 'daily';
+  });
+  const changeView = (v: typeof view) => { trackModeSwitch(view, v); setView(v); saveActiveView(v); };
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [shakeRow, setShakeRow] = useState<number | null>(null);
   const [timeUntilNext, setTimeUntilNext] = useState('');
   const [playsToday, setPlaysToday] = useState<number | null>(null);
@@ -250,7 +294,8 @@ export default function App() {
     setEvaluations(newEvaluations);
     setCurrentGuess('');
     setHintsUsedPerGuess(newHintsUsedPerGuess);
-    
+    trackGuess('daily', newGuesses.length, challenge.wordLength);
+
     // Update keyboard
     const newKeyStates = updateKeyboardState(keyStates, currentGuess, evaluation);
     setKeyStates(newKeyStates);
@@ -258,6 +303,7 @@ export default function App() {
     // Check win condition
     if (isWinningGuess(evaluation)) {
       setGameStatus('won');
+      trackGameEnd('daily', true, newGuesses.length, getRevealedHintsCount(hintStates), 0);
 
       const finalState: GameState = {
         date: challenge.date,
@@ -297,6 +343,7 @@ export default function App() {
     // Check lose condition
     if (newGuesses.length >= MAX_GUESSES) {
       setGameStatus('lost');
+      trackGameEnd('daily', false, newGuesses.length, getRevealedHintsCount(hintStates), 0);
       const finalState: GameState = {
         date: challenge.date,
         gameNumber: challenge.gameNumber,
@@ -339,6 +386,7 @@ export default function App() {
   };
 
   const handleRevealHint = (index: number) => {
+    trackHintRevealed('daily', index, guesses.length);
     const newHintStates = revealHint(hintStates, index);
     setHintStates(newHintStates);
 
@@ -355,43 +403,23 @@ export default function App() {
   };
 
   const handleShare = async () => {
-    const emoji = evaluations.map(row =>
-      row.map(state =>
-        state === 'correct' ? '🟩' :
-        state === 'present' ? '🟨' : '⬜'
-      ).join('')
-    ).join('\n');
-
-    // Calculate hints used
     const totalHintsUsed = getRevealedHintsCount(hintStates);
 
-    // Show hint count with thunder symbol
-    const hintGlyph = totalHintsUsed === 0 ? ' ⚡' : ` · ${totalHintsUsed}⚡`;
+    const result = await shareWithImage({
+      gameNumber: challenge.gameNumber,
+      evaluations,
+      hintsUsed: totalHintsUsed,
+      won: gameStatus === 'won',
+      wordLength: challenge.wordLength,
+    });
 
-    const text = `ClueLux #${challenge.gameNumber}${hintGlyph}\n\n${emoji}`;
-
-    // Try native share API first (works on mobile)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          text: text,
-        });
-        // No toast on successful share - native dialog is enough feedback
-        return;
-      } catch (err: any) {
-        // User cancelled or share failed - silently fall back to clipboard
-        if (err.name === 'AbortError') {
-          return; // User cancelled, don't show any error
-        }
-      }
-    }
-
-    // Fallback to clipboard
-    try {
-      await navigator.clipboard.writeText(text);
+    if (result === 'shared') {
+      trackShare('daily', 'native');
+    } else if (result === 'clipboard') {
+      trackShare('daily', 'clipboard');
       toast.success('Copied to clipboard');
-    } catch {
-      toast.error('Failed to copy');
+    } else {
+      toast.error('Failed to share');
     }
   };
 
@@ -406,7 +434,7 @@ export default function App() {
         {/* Header */}
         <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight leading-tight text-gray-900 dark:text-gray-100">
               ClueLux
             </h1>
           </div>
@@ -417,7 +445,7 @@ export default function App() {
           <div className="text-center space-y-4">
             <div className="relative w-16 h-16 mx-auto">
               <div className="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+              <div className="absolute inset-0 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
             <p className="text-gray-600 dark:text-gray-400 font-medium">Loading today's puzzle...</p>
           </div>
@@ -425,6 +453,20 @@ export default function App() {
       </div>
     );
   }
+
+  if (ARCHIVE_ENABLED && view === 'archive') {
+    return <ArchiveExperience onExit={() => changeView('daily')} />;
+  }
+
+  if (view === 'vocab') {
+    return <VocabExperience onExit={() => { trackDropOff('vocab', 'exit'); changeView('daily'); }} />;
+  }
+
+  if (view === 'revise') {
+    return <ReviseExperience onExit={() => { trackDropOff('revise', 'exit'); changeView('daily'); }} />;
+  }
+
+  const isFinished = gameStatus !== 'playing';
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col font-sans">
@@ -442,22 +484,39 @@ export default function App() {
               instead of pushing the icon buttons off-screen at large text sizes */}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight leading-tight text-gray-900 dark:text-gray-100">
                 ClueLux
               </h1>
-              {gameMode === 'daily' ? (
-                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-                  Daily Challenge
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                  Practice Mode
-                </span>
-              )}
+              <div className="relative">
+                <button
+                  onClick={() => setShowViewDropdown(!showViewDropdown)}
+                  className="flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-lg border border-amber-400/50 dark:border-amber-700/50 bg-gradient-to-r from-indigo-950/10 to-amber-500/10 text-amber-800 dark:text-amber-300 hover:from-indigo-950/20 hover:to-amber-500/20 transition-colors cursor-pointer"
+                >
+                  {view === 'daily' ? 'Daily' : view === 'archive' ? 'Archive' : view === 'vocab' ? 'Vocab' : 'Revise'}
+                  <span className="text-[10px] leading-none opacity-60" aria-hidden="true">▼</span>
+                </button>
+                {showViewDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setShowViewDropdown(false)} />
+                    <div className="absolute top-full left-0 mt-1 z-40 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden min-w-[110px]">
+                      {(['daily', 'archive'] as const).map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => { changeView(v); setShowViewDropdown(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+                            view === v
+                              ? 'bg-gradient-to-r from-indigo-950/10 to-amber-500/10 text-amber-800 dark:text-amber-300'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          {v.charAt(0).toUpperCase() + v.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              {challenge.wordLength}-letter challenge
-            </p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <Button
@@ -478,9 +537,20 @@ export default function App() {
             >
               <TrophyIcon className="h-4 w-4" />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSettings(true)}
+              aria-label="Settings"
+              className="hover:bg-gray-100 dark:hover:bg-slate-800 w-9 h-9"
+            >
+              <GearIcon className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
+
+      {/* Removed: "View result" bar was redundant — the result dialog auto-opens on completion */}
 
       {/* Main Content */}
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-1 overflow-x-hidden">
@@ -508,90 +578,95 @@ export default function App() {
           />
         </div>
 
-        {/* Hints */}
-        <HintDisplay hints={hintStates} onRevealHint={handleRevealHint} />
+        {/* Hints panel — visible during and after game */}
+        <HintDisplay hints={hintStates} onRevealHint={handleRevealHint} gameOver={isFinished} />
 
-        {/* Keyboard */}
-        <div className="mt-1">
-          <Keyboard
-            onKeyPress={handleKeyPress}
-            onEnter={handleEnter}
-            onBackspace={handleBackspace}
-            keyStates={keyStates}
-            disabled={gameStatus !== 'playing'}
-            currentGuessLength={currentGuess.length}
-            wordLength={challenge.wordLength}
-          />
-        </div>
+        {/* Keyboard — or post-game actions when finished */}
+        {isFinished ? (
+          <div className="mt-3 mx-auto w-full max-w-md space-y-2 pb-4">
+            <Button onClick={handleShare} className="w-full h-11 bg-gradient-to-r from-indigo-900 to-amber-500 text-white hover:opacity-90">
+              <span className="mr-2" aria-hidden="true">📤</span>
+              Share Result
+            </Button>
+            <Button onClick={() => changeView('archive')} variant="outline" className="w-full h-11">
+              ClueLux Archive
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-1">
+            <Keyboard
+              onKeyPress={handleKeyPress}
+              onEnter={handleEnter}
+              onBackspace={handleBackspace}
+              keyStates={keyStates}
+              disabled={false}
+              currentGuessLength={currentGuess.length}
+              wordLength={challenge.wordLength}
+            />
+          </div>
+        )}
       </main>
 
-      {/* Result Dialog */}
+      {/* Result Dialog — clean: emoji + word + streak lights, no grid replay */}
       <Dialog open={showResult} onOpenChange={setShowResult}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-center">
               {gameStatus === 'won' ? (
-                <div className="flex flex-col items-center gap-3 py-2">
-                  <span className="text-6xl">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).emoji}</span>
+                <div className="py-2">
                   <span className="text-3xl font-bold tracking-tight">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).title}</span>
-                  <span className="text-base text-gray-600 dark:text-gray-400 font-normal">{getVictoryMessage(guesses.length, getRevealedHintsCount(hintStates), challenge.answer).subtitle}</span>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <span className="text-4xl">{getDiscoveryMessage(challenge.answer, guesses).emoji}</span>
-                  <span className="text-2xl">{getDiscoveryMessage(challenge.answer, guesses).title}</span>
+                <div className="py-2">
+                  <span className="text-2xl font-bold">{getDiscoveryMessage(challenge.answer, guesses).title}</span>
                 </div>
               )}
             </DialogTitle>
             <DialogDescription asChild>
               <div className="space-y-4">
-                {gameStatus === 'won' ? (
-                  <div className="text-center">
-                    <p className="text-lg mb-1 text-gray-900 dark:text-gray-100 font-medium">
-                      {challenge.answer.toUpperCase()} in {guesses.length} {guesses.length === 1 ? 'attempt' : 'attempts'}
+                <div className="text-center">
+                  <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    {challenge.answer.toUpperCase()}
+                    {gameStatus === 'won' && <span className="text-gray-500 dark:text-gray-400"> in {guesses.length}</span>}
+                  </p>
+                  {gameStatus === 'won' && getRevealedHintsCount(hintStates) === 0 && (
+                    <p className="text-sm text-amber-600 dark:text-amber-400 font-medium mt-1">⚡ No hints needed</p>
+                  )}
+                  {playsToday !== null && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {playsToday.toLocaleString()} {playsToday === 1 ? 'play' : 'plays'} today
                     </p>
-                    {getRevealedHintsCount(hintStates) === 0 && (
-                      <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
-                        ⚡ No hints needed
-                      </p>
-                    )}
-                    {playsToday !== null && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                        {playsToday.toLocaleString()} {playsToday === 1 ? 'play' : 'plays'} today
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <p className="text-lg mb-2">
-                      {getDiscoveryMessage(challenge.answer, guesses).message}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {getRevealedHintsCount(hintStates)} hint{getRevealedHintsCount(hintStates) !== 1 ? 's' : ''} revealed
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {/* Countdown to next puzzle - only show in daily mode */}
+                {/* Hint streak lights */}
+                <div className="flex items-center justify-center gap-2">
+                  {hintStates.map((hint, i) => (
+                    <span
+                      key={i}
+                      className={
+                        hint.revealed
+                          ? 'h-3 w-3 rounded-full bg-lux shadow-[0_0_8px_2px_rgba(245,184,61,0.55)]'
+                          : 'h-3 w-3 rounded-full bg-slate-300 dark:bg-slate-700'
+                      }
+                    />
+                  ))}
+                </div>
+
+                {/* Countdown to next puzzle */}
                 {gameMode === 'daily' && (
-                  <div className="text-center p-5 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                  <div className="text-center p-4 bg-gradient-to-br from-indigo-950/5 to-amber-50 dark:from-indigo-950/30 dark:to-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800/40">
                     {timeUntilNext === '0:00:00' ? (
                       <div className="space-y-3">
                         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">New puzzle available!</p>
-                        <Button
-                          onClick={handleNewGame}
-                          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                          <span className="mr-2" aria-hidden="true">↻</span>
-                          Load New Puzzle
+                        <Button onClick={handleNewGame} className="w-full bg-gradient-to-r from-indigo-900 to-amber-500 text-white hover:opacity-90">
+                          ↻ Load New Puzzle
                         </Button>
                       </div>
                     ) : (
                       <>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Next puzzle in</p>
-                        <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
-                          {timeUntilNext}
-                        </p>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Next puzzle in</p>
+                        <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 tracking-tight">{timeUntilNext}</p>
                       </>
                     )}
                   </div>
@@ -599,9 +674,12 @@ export default function App() {
 
                 {/* Action buttons */}
                 <div className="flex flex-col gap-2">
-                  <Button onClick={handleShare} className="w-full">
+                  <Button onClick={handleShare} className="w-full bg-gradient-to-r from-indigo-900 to-amber-500 text-white hover:opacity-90">
                     <span className="mr-2" aria-hidden="true">📤</span>
                     Share Result
+                  </Button>
+                  <Button onClick={() => setShowResult(false)} variant="outline" className="w-full">
+                    Back to board
                   </Button>
                   <Button onClick={() => setShowStats(true)} variant="outline" className="w-full">
                     <TrophyIcon className="h-4 w-4 mr-2" />
@@ -613,6 +691,8 @@ export default function App() {
           </DialogHeader>
         </DialogContent>
       </Dialog>
+
+      <SettingsDialog open={showSettings} onOpenChange={setShowSettings} />
 
       {/* Help Dialog */}
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
@@ -686,9 +766,15 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900 rounded-lg mt-4">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.avgHintsPerGame.toFixed(1)}</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">Average Hints Used</div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{(stats.avgGuessesPerGame || 0).toFixed(1)}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Avg Guesses</div>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.avgHintsPerGame.toFixed(1)}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Avg Hints Used</div>
+                  </div>
                 </div>
               </div>
 
@@ -739,9 +825,9 @@ export default function App() {
       </Dialog>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-slate-800 py-2 bg-white dark:bg-slate-950">
-        <div className="max-w-4xl mx-auto px-4 text-center text-xs text-gray-500 dark:text-gray-400">
-          <p>Crafted for word lovers</p>
+      <footer className="py-2 bg-white dark:bg-slate-950">
+        <div className="max-w-4xl mx-auto px-4 text-center text-[11px] text-gray-400 dark:text-slate-600">
+          <p>#{challenge.gameNumber} · {challenge.date}</p>
         </div>
       </footer>
 

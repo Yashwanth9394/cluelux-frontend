@@ -46,7 +46,16 @@ module.exports = {
         'hint-breathe': 'hint-breathe 2.5s ease-in-out infinite',
       },
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['"Instrument Sans"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['"Bricolage Grotesque"', '"Instrument Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"DM Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+      },
+      colors: {
+        // The one warm accent: lit hints. Everything else stays cool slate/indigo.
+        lux: {
+          DEFAULT: '#F5B83D',
+          dim: '#3A3320',
+        },
       },
     },
   },

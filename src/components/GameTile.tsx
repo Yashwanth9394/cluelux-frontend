@@ -14,7 +14,7 @@ interface GameTileProps {
 
 export const GameTile = memo(function GameTile({ letter, state, position, delay = 0, size }: GameTileProps) {
   const getBorderColor = () => {
-    if (state === 'filled') return 'border-indigo-400';
+    if (state === 'filled') return 'border-indigo-400 dark:border-indigo-500/60';
     if (state === 'empty') return 'border-gray-300';
     return 'border-transparent';
   };
@@ -30,7 +30,7 @@ export const GameTile = memo(function GameTile({ letter, state, position, delay 
       case 'filled':
         return 'bg-white dark:bg-slate-800 border-gray-400 dark:border-slate-600';
       default:
-        return 'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700';
+        return 'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600';
     }
   };
 

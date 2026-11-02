@@ -37,7 +37,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
         // Grey for absent letters
         return 'bg-gradient-to-br from-slate-400 via-slate-500 to-slate-600 hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 text-white border-slate-600/50 opacity-70 hover:opacity-80';
       default:
-        return 'glass-subtle hover:glass-card text-gray-800 dark:text-gray-200 border-gray-300/50 dark:border-gray-600/50 hover:border-indigo-400/50 hover:shadow-[0_4px_16px_rgba(99,102,241,0.2)]';
+        return 'bg-gray-100 dark:bg-slate-700/80 hover:bg-gray-200 dark:hover:bg-slate-600/80 text-gray-800 dark:text-gray-200 border-gray-300/60 dark:border-slate-500/40 hover:border-indigo-400/40 hover:shadow-[0_2px_8px_rgba(99,102,241,0.15)]';
     }
   }, [keyStates]);
 
@@ -87,7 +87,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
                     h-14 sm:h-16 border-2
                     ${isSpecial ? 'px-3 min-w-[56px] sm:min-w-[75px] text-xs sm:text-sm font-extrabold' : 'w-full p-0 text-base sm:text-lg font-bold'}
                     ${key === 'ENTER' && isWordComplete && !disabled
-                      ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900 text-gray-800 dark:text-gray-200 hover:bg-amber-100 dark:hover:bg-amber-950/50'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-700/50 text-indigo-900 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 shadow-[0_0_10px_rgba(99,102,241,0.15)]'
                       : getKeyColor(key)}
                     rounded-lg sm:rounded-xl
                     transition-all duration-200

@@ -90,9 +90,30 @@
   }
 }
 
-/* Smooth transitions */
-* {
+/* Smooth transitions — scoped to interactive elements only */
+button, a, input, select, textarea {
   @apply transition-colors duration-200;
+}
+
+/* Moving gold gradient streak around the hint button —
+   16 overlapping segments, each offset slightly, bright head → fading tail */
+.hint-streak {
+  position: relative;
+  overflow: hidden;
+  background: rgba(245, 184, 61, 0.10);
+}
+
+.hint-streak-seg {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1.1 98.9;
+  animation: hint-seg-travel 2.4s linear infinite;
+}
+
+@keyframes hint-seg-travel {
+  from { stroke-dashoffset: var(--off); }
+  to   { stroke-dashoffset: calc(var(--off) - 100px); }
 }
 
 /* Remove motion for users who prefer reduced motion */

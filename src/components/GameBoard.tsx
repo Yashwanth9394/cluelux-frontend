@@ -20,6 +20,7 @@ interface GameBoardProps {
 
 export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, wordLength, hints, onRevealHint, gameStatus, shakeRow }: GameBoardProps) {
   const [showPopup, setShowPopup] = useState<number | null>(null);
+  const [postGameToast, setPostGameToast] = useState<number | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
 
   // Fluid tile size: words run 5-12 letters, and a fixed tile size that looks
@@ -60,9 +61,17 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
 
   const handleHintClick = (hintIndex: number) => {
     const hint = hints[hintIndex];
-    // Only show popup if this hint is actually revealable (unlocked AND every earlier hint already revealed)
-    if (hint && canRevealHint(hints, hintIndex)) {
-      // Mark hint as revealed when clicked
+    if (!hint) return;
+
+    const isGameOver = gameStatus === 'won' || gameStatus === 'lost';
+
+    if (isGameOver && !hint.revealed) {
+      setPostGameToast(hintIndex);
+      setTimeout(() => setPostGameToast(null), 2500);
+      return;
+    }
+
+    if (canRevealHint(hints, hintIndex)) {
       if (!hint.revealed && onRevealHint) {
         onRevealHint(hintIndex);
       }
@@ -102,36 +111,52 @@ export function GameBoard({ guesses, currentGuess, evaluations, maxGuesses, word
             const hint = rowIndex > 0 ? hints[hintIndex] : null;
             const isUnlocked = !!hint?.unlocked;
             const isRevealed = hint?.revealed;
+            const isGameOver = gameStatus === 'won' || gameStatus === 'lost';
             const canReveal = hint ? canRevealHint(hints, hintIndex) : false;
             // Unlocked but waiting on an earlier hint being revealed first
             const isBlockedBySequence = isUnlocked && !isRevealed && !canReveal;
             const isUnlockedNotViewed = canReveal && !isRevealed;
+            // After game is over: lock all unrevealed hints (no glow, no interaction)
+            const isLockedPostGame = isGameOver && !isRevealed;
             const shouldShake = shakeRow === rowIndex;
 
             return (
               <div key={rowIndex} className="flex flex-col gap-1">
                 {/* Minimal indicator - skip for first row, and skip entirely until this hint unlocks */}
                 {rowIndex > 0 && isUnlocked && (
-                  <button
-                    onClick={() => handleHintClick(hintIndex)}
-                    className={`
-                      relative h-1 rounded-full transition-all duration-300 mx-auto
-                      ${isBlockedBySequence
-                        ? 'w-2 bg-slate-300 dark:bg-slate-700 opacity-30 cursor-not-allowed'
-                        : isUnlockedNotViewed
-                        ? 'w-8 bg-amber-500 cursor-pointer hover:w-9 hover:shadow-[0_0_8px_rgba(251,191,36,0.5)] animate-hint-breathe'
-                        : 'w-3 bg-blue-500 opacity-60 cursor-pointer hover:scale-105 hover:opacity-70 transition-transform'
+                  <div className="relative flex justify-center">
+                    <button
+                      onClick={() => handleHintClick(hintIndex)}
+                      className={`
+                        relative h-1 rounded-full transition-all duration-300
+                        ${isLockedPostGame
+                          ? 'w-2 bg-slate-300 dark:bg-slate-700 opacity-40 cursor-pointer hover:opacity-60'
+                          : isBlockedBySequence
+                          ? 'w-2 bg-slate-300 dark:bg-slate-700 opacity-30 cursor-not-allowed'
+                          : isUnlockedNotViewed
+                          ? 'w-8 bg-amber-500 cursor-pointer hover:w-9 hover:shadow-[0_0_8px_rgba(251,191,36,0.5)] animate-hint-breathe'
+                          : isGameOver
+                          ? 'w-2 bg-blue-500 opacity-40 cursor-default'
+                          : 'w-3 bg-blue-500 opacity-60 cursor-pointer hover:scale-105 hover:opacity-70 transition-transform'
+                        }
+                      `}
+                      aria-label={
+                        isLockedPostGame
+                          ? `Hint ${hintIndex + 1} — solved without`
+                          : isBlockedBySequence
+                          ? `Hint ${hintIndex + 1}: Reveal Hint ${hintIndex} first`
+                          : isRevealed
+                          ? `Hint ${hintIndex + 1} viewed`
+                          : `Hint ${hintIndex + 1} available`
                       }
-                    `}
-                    aria-label={
-                      isBlockedBySequence
-                        ? `Reveal Hint ${hintIndex} first`
-                        : isRevealed
-                        ? `Hint ${hintIndex + 1} viewed`
-                        : `Hint ${hintIndex + 1} available`
-                    }
-                    disabled={isBlockedBySequence}
-                  />
+                      disabled={isBlockedBySequence}
+                    />
+                    {postGameToast === hintIndex && (
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 text-[10px] font-medium px-2 py-1 rounded-md shadow-lg z-20 animate-in fade-in slide-in-from-bottom-1 duration-200">
+                        You solved without this hint!
+                      </div>
+                    )}
+                  </div>
                 )}
                 
                 {/* Game tiles with victory glow and shake animation */}

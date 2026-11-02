@@ -1,0 +1,197 @@
+[
+  {
+    "word": "QUAFF",
+    "wordLength": 5,
+    "difficulty": "hard",
+    "category": "vocabulary",
+    "hints": [
+      "Often done at a pub or tavern",
+      "Rhymes with 'laugh' in some dialects",
+      "Means to drink something heartily",
+      "Synonym: gulp, swig, chug",
+      "Starts with 'QU', ends with 'FF'"
+    ]
+  },
+  {
+    "word": "BRISK",
+    "wordLength": 5,
+    "difficulty": "medium",
+    "category": "vocabulary",
+    "hints": [
+      "Describes a cold morning walk",
+      "Can describe a pace or a breeze",
+      "Antonym: sluggish, lethargic",
+      "Synonym: lively, energetic, quick",
+      "Starts with 'BR', ends with 'SK'"
+    ]
+  },
+  {
+    "word": "GUILE",
+    "wordLength": 5,
+    "difficulty": "hard",
+    "category": "vocabulary",
+    "hints": [
+      "A fox is often said to possess this",
+      "Useful in chess and negotiations",
+      "Means sly or cunning intelligence",
+      "Synonym: craftiness, deceit, wile",
+      "Starts with 'GU', ends with 'LE'"
+    ]
+  },
+  {
+    "word": "PIQUE",
+    "wordLength": 5,
+    "difficulty": "hard",
+    "category": "vocabulary",
+    "hints": [
+      "Can describe a type of fabric weave",
+      "Often preceded by 'fit of'",
+      "Means to stimulate or to irritate",
+      "Synonym: provoke, arouse, annoy",
+      "Starts with 'PI', ends with 'UE'"
+    ]
+  },
+  {
+    "word": "KNACK",
+    "wordLength": 5,
+    "difficulty": "medium",
+    "category": "vocabulary",
+    "hints": [
+      "Some people just have it naturally",
+      "A talent for doing something easily",
+      "Often said with 'for' — a ___ for cooking",
+      "Synonym: talent, flair, aptitude",
+      "Starts with 'KN', ends with 'CK'"
+    ]
+  },
+  {
+    "word": "LUCID",
+    "wordLength": 5,
+    "difficulty": "medium",
+    "category": "vocabulary",
+    "hints": [
+      "Describes a type of dreaming",
+      "Opposite of confused or muddled",
+      "Shares a root with 'luminous'",
+      "Synonym: clear, coherent, rational",
+      "Starts with 'LU', ends with 'ID'"
+    ]
+  },
+  {
+    "word": "VIVID",
+    "wordLength": 5,
+    "difficulty": "easy",
+    "category": "vocabulary",
+    "hints": [
+      "Describes a very bright sunset",
+      "How you might recall a strong memory",
+      "Means intensely deep or bright",
+      "Synonym: striking, brilliant, graphic",
+      "Starts with 'VI', ends with 'ID'"
+    ]
+  },
+  {
+    "word": "STOIC",
+    "wordLength": 5,
+    "difficulty": "medium",
+    "category": "vocabulary",
+    "hints": [
+      "Named after an ancient Greek philosophy",
+      "How someone remains during hardship",
+      "Shows no emotion or complaint",
+      "Synonym: impassive, unemotional, calm",
+      "Starts with 'ST', ends with 'IC'"
+    ]
+  },
+  {
+    "word": "EPHEMERAL",
+    "wordLength": 9,
+    "difficulty": "hard",
+    "category": "vocabulary",
+    "hints": [
+      "A mayfly's lifespan is this",
+      "Social media stories are designed to be this",
+      "Lasting for a very short time",
+      "Synonym: fleeting, transient, brief",
+      "Starts with 'EPH', ends with 'RAL'"
+    ]
+  },
+  {
+    "word": "ARDOR",
+    "wordLength": 5,
+    "difficulty": "hard",
+    "category": "vocabulary",
+    "hints": [
+      "A poet might write about this feeling",
+      "What fans show for their team",
+      "Great enthusiasm or passion",
+      "Synonym: fervor, zeal, passion",
+      "Starts with 'AR', ends with 'OR'"
+    ]
+  },
+  {
+    "word": "DEFTLY",
+    "wordLength": 6,
+    "difficulty": "medium",
+    "category": "vocabulary",
+    "hints": [
+      "How a surgeon handles instruments",
+      "Opposite of clumsily or awkwardly",
+      "Done in a skillful, quick way",
+      "Synonym: adroitly, nimbly, skillfully",
+      "Starts with 'DE', ends with 'LY'"
+    ]
+  },
+  {
+    "word": "MIRTH",
+    "wordLength": 5,
+    "difficulty": "medium",
+    "category": "vocabulary",
+    "hints": [
+      "Found at holiday gatherings",
+      "Often causes laughter and smiles",
+      "A feeling of great amusement",
+      "Synonym: merriment, glee, hilarity",
+      "Starts with 'MI', ends with 'TH'"
+    ]
+  },
+  {
+    "word": "TERSE",
+    "wordLength": 5,
+    "difficulty": "medium",
+    "category": "vocabulary",
+    "hints": [
+      "How a frustrated boss might reply",
+      "Describes writing with no wasted words",
+      "Using few words, sometimes rudely brief",
+      "Synonym: curt, concise, laconic",
+      "Starts with 'TE', ends with 'SE'"
+    ]
+  },
+  {
+    "word": "WRATH",
+    "wordLength": 5,
+    "difficulty": "easy",
+    "category": "vocabulary",
+    "hints": [
+      "One of the seven deadly sins",
+      "Gods in myths often show this",
+      "Extreme, intense anger",
+      "Synonym: fury, rage, ire",
+      "Starts with 'WR', ends with 'TH'"
+    ]
+  },
+  {
+    "word": "PLUCK",
+    "wordLength": 5,
+    "difficulty": "medium",
+    "category": "vocabulary",
+    "hints": [
+      "What you do to guitar strings",
+      "Can also mean spirited courage",
+      "To pull something off quickly",
+      "Synonym: courage, nerve, grit",
+      "Starts with 'PL', ends with 'CK'"
+    ]
+  }
+]

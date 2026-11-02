@@ -1,0 +1,38 @@
+[
+ {
+  "id": "orange",
+  "word": "ORANGE",
+  "length": 6,
+  "hints": [
+   "It's a color and the thing that gave the color its name",
+   "Round, juicy, and full of vitamin C",
+   "Peeled in segments and squeezed into breakfast juice",
+   "Between red and yellow in a rainbow",
+   "A citrus fruit with a bright, bumpy skin"
+  ]
+ },
+ {
+  "id": "planet",
+  "word": "PLANET",
+  "length": 6,
+  "hints": [
+   "A body that circles a star and has cleared its own path",
+   "Earth is the only one known to support life",
+   "Mars, Venus and Jupiter are all examples",
+   "Eight of them orbit our Sun",
+   "A large world that travels around a star"
+  ]
+ },
+ {
+  "id": "winter",
+  "word": "WINTER",
+  "length": 6,
+  "hints": [
+   "The season that arrives when the days are shortest",
+   "Snowmen, mittens and hot chocolate belong to it",
+   "Follows autumn and comes before spring",
+   "Cold months in the northern half of the year, from December to February",
+   "The chilliest season, when it often snows"
+  ]
+ }
+]

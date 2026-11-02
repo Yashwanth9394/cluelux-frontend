@@ -56,6 +56,8 @@ export interface GameStats {
   maxStreak: number;
   hintsUsed: number;
   avgHintsPerGame: number;
+  totalGuesses: number;
+  avgGuessesPerGame: number;
   winDistribution: Record<number, number>;
   lastPlayed: string;
 
