@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { getThemePreference, setThemePreference, type ThemePreference } from '../lib/theme';
-import { getUser, setUser, clearUser, decodeJwt, type User } from '../lib/auth';
-import { track } from '../lib/analytics';
-import { pullProgress, pushProgress } from '../services/syncService';
-import { GoogleLogin } from '@react-oauth/google';
+import { getUser, clearUser, type User } from '../lib/auth';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -21,23 +19,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     const next: ThemePreference = isDark ? 'light' : 'dark';
     setTheme(next);
     setThemePreference(next);
-  };
-
-  const handleGoogleSuccess = (response: any) => {
-    try {
-      const decoded = decodeJwt(response.credential);
-      const u: User = {
-        name: decoded.name || decoded.email,
-        email: decoded.email,
-        picture: decoded.picture || '',
-      };
-      setUser(u);
-      setUserState(u);
-      track('user_login', { method: 'google', source: 'settings' });
-      pullProgress().then(() => pushProgress());
-    } catch (e) {
-      console.error('Google login decode failed:', e);
-    }
   };
 
   const handleSignOut = () => {
@@ -116,17 +97,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <div className="space-y-2">
             <p className="text-xs text-gray-500 dark:text-gray-400">Sign in to save your progress</p>
             {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
-              <div className="rounded-full overflow-hidden inline-flex" style={{ colorScheme: isDark ? 'dark' : 'light' }}>
-                <GoogleLogin
-                  key={isDark ? 'dark' : 'light'}
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => console.error('Google login failed')}
-                  size="medium"
-                  width="220"
-                  theme={isDark ? 'filled_black' : 'outline'}
-                  shape="pill"
-                />
-              </div>
+              <GoogleSignInButton
+                source="settings"
+                onSuccess={(u) => setUserState(u)}
+              />
             ) : (
               <p className="text-xs text-gray-400 dark:text-gray-500">Google sign-in not configured</p>
             )}

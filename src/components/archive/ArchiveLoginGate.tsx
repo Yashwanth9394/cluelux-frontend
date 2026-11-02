@@ -1,9 +1,5 @@
-import { GoogleLogin } from '@react-oauth/google';
 import { Button } from '../ui/button';
-import { setUser, decodeJwt, type User } from '../../lib/auth';
-import { track } from '../../lib/analytics';
-import { pullProgress, pushProgress } from '../../services/syncService';
-import { getThemePreference } from '../../lib/theme';
+import { GoogleSignInButton } from '../GoogleSignInButton';
 
 interface Props {
   onLoggedIn: () => void;
@@ -11,24 +7,6 @@ interface Props {
 }
 
 export function ArchiveLoginGate({ onLoggedIn, onBack }: Props) {
-  const isDark = getThemePreference() === 'dark';
-
-  const handleSuccess = (response: any) => {
-    try {
-      const decoded = decodeJwt(response.credential);
-      const u: User = {
-        name: decoded.name || decoded.email,
-        email: decoded.email,
-        picture: decoded.picture || '',
-      };
-      setUser(u);
-      track('user_login', { method: 'google', source: 'archive_gate' });
-      pullProgress().then(() => { pushProgress(); onLoggedIn(); });
-    } catch (e) {
-      console.error('Google login decode failed:', e);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col font-sans">
       <header className="border-b border-slate-200 dark:border-slate-800">
@@ -50,17 +28,11 @@ export function ArchiveLoginGate({ onLoggedIn, onBack }: Props) {
 
         <div className="mt-8 flex justify-center">
           {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
-            <div className="rounded-full overflow-hidden inline-flex" style={{ colorScheme: isDark ? 'dark' : 'light' }}>
-              <GoogleLogin
-                key={isDark ? 'dark' : 'light'}
-                onSuccess={handleSuccess}
-                onError={() => console.error('Google login failed')}
-                size="large"
-                theme={isDark ? 'filled_black' : 'outline'}
-                shape="pill"
-                text="continue_with"
-              />
-            </div>
+            <GoogleSignInButton
+              source="archive_gate"
+              size="large"
+              onSuccess={() => onLoggedIn()}
+            />
           ) : (
             <p className="text-sm text-slate-400">Google sign-in is being set up. Check back soon!</p>
           )}
