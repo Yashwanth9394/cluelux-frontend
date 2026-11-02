@@ -200,8 +200,8 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
             <ContactCard
               icon="📣"
               label="Follow us"
-              value="@cluelux"
-              href="https://instagram.com/cluelux"
+              value="@playcluelux"
+              href="https://instagram.com/playcluelux"
               external
             />
           </div>

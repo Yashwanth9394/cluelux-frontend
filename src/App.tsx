@@ -837,7 +837,7 @@ export default function App() {
           <p>
             <a href="mailto:hello@cluelux.com" className="hover:text-gray-600 dark:hover:text-slate-400 transition-colors">Feedback</a>
             {' · '}
-            <a href="https://instagram.com/cluelux" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 dark:hover:text-slate-400 transition-colors">Instagram</a>
+            <a href="https://instagram.com/playcluelux" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 dark:hover:text-slate-400 transition-colors">Instagram</a>
           </p>
         </div>
       </footer>
