@@ -1,11 +1,13 @@
 /**
  * Archive data sources.
  *
- * Archive days: the backend serves a past day through `?date=`. Production
- * ignores that parameter today (UAT-only, see GetDailyWordHandler.java), so a
- * response whose date doesn't match the one asked for is treated as "archive
- * unavailable" - never as that day's puzzle. The same check stops a future or
- * current day from ever being shown as an archive game.
+ * Archive days: the backend serves a strictly-past day through `?date=` (on
+ * prod too - past words are already revealed, see GetDailyWordHandler.java).
+ * The request hits the API Gateway origin directly, bypassing CloudFront,
+ * whose cache key ignores the query string. A response whose date doesn't
+ * match the one asked for is still treated as "archive unavailable" - never
+ * as that day's puzzle - which also stops a future or current day from ever
+ * being shown as an archive game.
  *
  * Special puzzles: placeholder pool bundled with this branch. Answers are
  * visible in the bundle, so this moves behind an endpoint before launch.
@@ -16,6 +18,12 @@ import { getPlayedSpecialIds } from '../lib/archiveStore';
 import specialPack from '../data/special-pack.json';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Archive asks for a specific past day via ?date=. That must bypass CloudFront:
+// its cache key ignores the query string, so a dated response could be cached
+// and served to everyone as "today". Hit the API Gateway origin directly.
+const DIRECT_API_URL = API_BASE_URL.includes('cloudfront.net')
+  ? 'https://qp5p347l9l.execute-api.us-east-1.amazonaws.com/prod'
+  : API_BASE_URL;
 
 export interface PuzzleData {
   /** Storage id: `archive:2026-11-03` or `special:anchor`. */
@@ -74,7 +82,7 @@ export async function fetchArchiveDay(date: string): Promise<PuzzleData> {
   const sample = await loadSampleArchiveDay(date);
   if (sample) return sample;
 
-  const response = await fetch(`${API_BASE_URL}/daily-word?date=${date}`, {
+  const response = await fetch(`${DIRECT_API_URL}/daily-word?date=${date}`, {
     method: 'GET',
     cache: 'no-store',
     headers: { 'Content-Type': 'application/json' },

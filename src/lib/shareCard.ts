@@ -150,6 +150,18 @@ export async function generateShareCard(opts: {
   });
 }
 
+function buildEmojiGrid(evaluations: TileState[][]): string {
+  return evaluations
+    .map((row) =>
+      row
+        .map((state) =>
+          state === 'correct' ? '🟩' : state === 'present' ? '🟨' : '⬛'
+        )
+        .join('')
+    )
+    .join('\n');
+}
+
 export async function shareWithImage(opts: {
   gameNumber: number;
   evaluations: TileState[][];
@@ -162,9 +174,10 @@ export async function shareWithImage(opts: {
   const blob = await generateShareCard(opts);
   const file = new File([blob], `cluelux-${gameNumber}.png`, { type: 'image/png' });
 
-  const guessText = won ? `Solved in ${evaluations.length}` : 'Failed';
+  const guessText = won ? `Solved in ${evaluations.length}` : 'X';
   const hintText = hintsUsed === 0 ? '⚡ No hints' : `${hintsUsed} hint${hintsUsed > 1 ? 's' : ''}`;
-  const text = `ClueLux #${gameNumber} — ${guessText} · ${hintText}\n\nCan you beat me? → cluelux.com`;
+  const grid = buildEmojiGrid(evaluations);
+  const text = `ClueLux #${gameNumber} — ${guessText} · ${hintText}\n\n${grid}\n\ncluelux.com`;
 
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     try {
