@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ClueLux social preview (1200x630)</title>
+<!-- Renders public/og-image.png. Open at a 1200x630 viewport and screenshot it. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    color: #fff;
+    background:
+      radial-gradient(ellipse 70% 90% at 82% 105%, rgba(129, 140, 248, .55), transparent 62%),
+      radial-gradient(ellipse 60% 80% at 8% -10%, rgba(255, 255, 255, .16), transparent 60%),
+      #4F46E5;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 64px 72px 60px;
+  }
+  .brand { font-size: 34px; font-weight: 800; letter-spacing: -0.01em; display: flex; align-items: center; gap: 14px; }
+  .brand i { width: 14px; height: 14px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 0 6px rgba(245,158,11,.28); }
+  .tiles { display: flex; gap: 16px; }
+  .tile {
+    width: 148px; height: 148px; border-radius: 16px;
+    display: grid; place-items: center;
+    font-size: 96px; font-weight: 800; line-height: 1;
+    box-shadow: 0 10px 0 rgba(0,0,0,.18);
+  }
+  .c { background: #10b981; }
+  .p { background: #f59e0b; }
+  .a { background: #94a3b8; }
+  .foot { display: flex; justify-content: space-between; align-items: flex-end; }
+  h1 { font-size: 58px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; max-width: 700px; }
+  .sub { font-size: 28px; font-weight: 500; opacity: .9; text-align: right; line-height: 1.3; }
+</style>
+</head>
+<body>
+  <div class="brand"><i></i>ClueLux</div>
+  <div class="tiles" aria-hidden="true">
+    <div class="tile a">B</div><div class="tile p">R</div><div class="tile c">I</div>
+    <div class="tile a">G</div><div class="tile c">H</div><div class="tile p">T</div>
+  </div>
+  <div class="foot">
+    <h1>A daily word puzzle where the clues light the way.</h1>
+    <div class="sub">New word<br>every day</div>
+  </div>
+</body>
+</html>

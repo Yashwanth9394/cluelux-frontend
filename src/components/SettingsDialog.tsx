@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { getThemePreference, setThemePreference, type ThemePreference } from '../lib/theme';
 import { getUser, setUser, clearUser, decodeJwt, type User } from '../lib/auth';
 import { track } from '../lib/analytics';
+import { pullProgress, pushProgress } from '../services/syncService';
 import { GoogleLogin } from '@react-oauth/google';
 
 interface SettingsDialogProps {
@@ -33,6 +34,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       setUser(u);
       setUserState(u);
       track('user_login', { method: 'google', source: 'settings' });
+      pullProgress().then(() => pushProgress());
     } catch (e) {
       console.error('Google login decode failed:', e);
     }

@@ -2,6 +2,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { Button } from '../ui/button';
 import { setUser, decodeJwt, type User } from '../../lib/auth';
 import { track } from '../../lib/analytics';
+import { pullProgress, pushProgress } from '../../services/syncService';
 import { getThemePreference } from '../../lib/theme';
 
 interface Props {
@@ -22,7 +23,7 @@ export function ArchiveLoginGate({ onLoggedIn, onBack }: Props) {
       };
       setUser(u);
       track('user_login', { method: 'google', source: 'archive_gate' });
-      onLoggedIn();
+      pullProgress().then(() => { pushProgress(); onLoggedIn(); });
     } catch (e) {
       console.error('Google login decode failed:', e);
     }

@@ -22,6 +22,7 @@ import { getCombinedGreeting, getDiscoveryMessage, getVictoryMessage } from './u
 
 // Import API service
 import { fetchDailyWord, formatDailyWordForGame, recordPlay } from './services/api';
+import { pushProgress } from './services/syncService';
 
 // Fallback data in case API is not available
 import todayData from './data/today.json';
@@ -325,6 +326,7 @@ export default function App() {
       const stats = loadStats();
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
+      pushProgress();
 
       // Daily challenge only - practice completions aren't "today's puzzle"
       // and shouldn't count toward or be compared against that total.
@@ -364,6 +366,7 @@ export default function App() {
       const stats = loadStats();
       const newStats = updateStats(stats, finalState);
       saveStats(newStats);
+      pushProgress();
 
       if (gameMode === 'daily') {
         recordPlay(challenge.date).then(setPlaysToday);
