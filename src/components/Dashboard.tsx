@@ -2,20 +2,7 @@ import { useState, useEffect } from 'react';
 
 interface StatsData {
   generatedAt: string;
-  apiRequestsByDay: Record<string, number>;
-  apiRequestsTotal: number;
-  api4xxErrors: number;
-  api5xxErrors: number;
-  apiLatencyAvgMs: number;
-  playsByDay: Record<string, number>;
-  playsByHour: Record<string, number>;
-  avgGuessesByDay: Record<string, number>;
-  avgGuessesByHour: Record<string, number>;
-  winsByDay: Record<string, number>;
-  lossesByDay: Record<string, number>;
-  playsTotal: number;
-  wins: number;
-  losses: number;
+  widgets: { title: string; image: string }[];
   wordsScheduled: number;
   scheduleStart: string;
   scheduleEnd: string;
@@ -59,9 +46,6 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
       setCodeError(true);
     }
   };
-
-  const maxReq = stats ? Math.max(...Object.values(stats.apiRequestsByDay), 1) : 1;
-  const maxPlays = stats ? Math.max(...Object.values(stats.playsByDay), 1) : 1;
 
   if (!authenticated) {
     return (
@@ -128,85 +112,27 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
 
       {stats && (
         <>
-          {/* Stat tiles */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            <StatTile label="API Requests" value={stats.apiRequestsTotal.toLocaleString()} sub="Last 30 days" color="indigo" />
-            <StatTile label="Games Played" value={stats.playsTotal.toLocaleString()} sub="All time" color="gold" />
-            <StatTile label="Words Scheduled" value={String(stats.wordsScheduled)} sub={`Through ${formatDate(stats.scheduleEnd)}`} color="green" />
-            <StatTile label="Avg Latency" value={`${stats.apiLatencyAvgMs}ms`} sub="API response" color="blue" />
-            <StatTile label="4xx Errors" value={String(stats.api4xxErrors)} sub="30 days" color={stats.api4xxErrors > 0 ? 'amber' : 'green'} />
-            <StatTile label="5xx Errors" value={String(stats.api5xxErrors)} sub="30 days" color={stats.api5xxErrors > 0 ? 'red' : 'green'} />
-          </div>
-
-          {/* Player Analytics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <StatTile label="Wins" value={String(stats.wins)} sub={stats.playsTotal > 0 ? `${Math.round((stats.wins / stats.playsTotal) * 100)}% win rate` : '—'} color="green" />
-            <StatTile label="Losses" value={String(stats.losses)} sub={stats.playsTotal > 0 ? `${Math.round((stats.losses / stats.playsTotal) * 100)}% loss rate` : '—'} color="red" />
-          </div>
-
-          {/* Avg guesses per day (CloudWatch Average, period 1 day) */}
-          <Section title="Avg Guesses per Day">
-            {Object.keys(stats.avgGuessesByDay).length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)] py-4">No outcome data yet. Collecting from the next game played.</p>
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(stats.avgGuessesByDay).map(([day, avg]) => (
-                  <BarRow key={day} label={formatDate(day)} value={avg} max={6} color="bg-emerald-500" suffix=" avg" />
-                ))}
-              </div>
-            )}
-          </Section>
-
-          {/* Hourly activity (last 48h) */}
-          <Section title="Games Played per Hour (48h)">
-            {Object.keys(stats.playsByHour).length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)] py-4">No hourly activity yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(stats.playsByHour).map(([hour, count]) => (
-                  <BarRow key={hour} label={formatHour(hour)} value={count} max={Math.max(...Object.values(stats.playsByHour), 1)} color="bg-amber-500" />
-                ))}
-              </div>
-            )}
-          </Section>
-
-          <Section title="Avg Guesses per Hour (48h)">
-            {Object.keys(stats.avgGuessesByHour).length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)] py-4">No hourly outcome data yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(stats.avgGuessesByHour).map(([hour, avg]) => (
-                  <BarRow key={hour} label={formatHour(hour)} value={avg} max={6} color="bg-emerald-500" suffix=" avg" />
-                ))}
-              </div>
-            )}
-          </Section>
-
-          {/* API Traffic */}
-          <Section title="API Traffic (30 days)">
-            {Object.keys(stats.apiRequestsByDay).length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)] py-4">No API traffic recorded yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(stats.apiRequestsByDay).map(([day, count]) => (
-                  <BarRow key={day} label={formatDate(day)} value={count} max={maxReq} color="bg-indigo-500" />
-                ))}
-              </div>
-            )}
-          </Section>
-
-          {/* Play Counts */}
-          <Section title="Games Played by Day">
-            {Object.keys(stats.playsByDay).length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)] py-4">No games recorded yet. Play a game to see data here!</p>
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(stats.playsByDay).map(([day, count]) => (
-                  <BarRow key={day} label={formatDate(day)} value={count} max={maxPlays} color="bg-amber-500" />
-                ))}
-              </div>
-            )}
-          </Section>
+          {/* CloudWatch-rendered graphs (games, API, latency) */}
+          {stats.widgets.length === 0 ? (
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-4 text-sm text-[var(--text-secondary)] mb-6">
+              No graphs returned. Game graphs fill in once people play; API graphs show traffic from the last 7 days.
+            </div>
+          ) : (
+            <div className="space-y-5 mb-6">
+              {stats.widgets.map((w) => (
+                <div key={w.title}>
+                  <h2 className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)] mb-2">{w.title}</h2>
+                  <div className="bg-white rounded-xl border border-[var(--border-primary)] overflow-hidden">
+                    <img
+                      src={`data:image/png;base64,${w.image}`}
+                      alt={w.title}
+                      className="w-full h-auto block"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Schedule */}
           <Section title="Word Schedule">
@@ -265,24 +191,6 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
   );
 }
 
-function StatTile({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
-  const colorMap: Record<string, string> = {
-    indigo: 'text-indigo-400',
-    gold: 'text-amber-400',
-    green: 'text-emerald-400',
-    blue: 'text-blue-400',
-    amber: 'text-amber-400',
-    red: 'text-red-400',
-  };
-  return (
-    <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-3.5">
-      <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">{label}</div>
-      <div className={`text-xl font-bold tracking-tight ${colorMap[color] || ''}`}>{value}</div>
-      <div className="text-xs text-[var(--text-secondary)] mt-0.5">{sub}</div>
-    </div>
-  );
-}
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-6">
@@ -290,19 +198,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-4">
         {children}
       </div>
-    </div>
-  );
-}
-
-function BarRow({ label, value, max, color, suffix }: { label: string; value: number; max: number; color: string; suffix?: string }) {
-  const pct = value > 0 ? Math.max((value / max) * 100, 2) : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs font-mono text-[var(--text-secondary)] w-20 shrink-0">{label}</span>
-      <div className="flex-1 h-5 bg-white/5 rounded overflow-hidden">
-        <div className={`h-full ${color} rounded transition-all`} style={{ width: `${pct}%` }} />
-      </div>
-      <span className="text-xs font-mono font-medium w-16 text-right">{value.toLocaleString()}{suffix || ''}</span>
     </div>
   );
 }
@@ -326,12 +221,6 @@ function ContactCard({ icon, label, value, href, external }: { icon: string; lab
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-// "2026-11-02T14" (UTC hour from CloudWatch) → local "Nov 2, 2pm"
-function formatHour(hourStr: string): string {
-  const d = new Date(hourStr + ':00:00Z');
-  return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' });
 }
 
 function daysUntil(dateStr: string): number {
