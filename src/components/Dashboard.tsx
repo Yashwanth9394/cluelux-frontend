@@ -113,13 +113,13 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
       {stats && (
         <>
           {/* CloudWatch-rendered graphs (games, API, latency) */}
-          {stats.widgets.length === 0 ? (
+          {(stats.widgets ?? []).length === 0 ? (
             <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-4 text-sm text-[var(--text-secondary)] mb-6">
               No graphs returned. Game graphs fill in once people play; API graphs show traffic from the last 7 days.
             </div>
           ) : (
             <div className="space-y-5 mb-6">
-              {stats.widgets.map((w) => (
+              {(stats.widgets ?? []).map((w) => (
                 <div key={w.title}>
                   <h2 className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-secondary)] mb-2">{w.title}</h2>
                   <div className="bg-white rounded-xl border border-[var(--border-primary)] overflow-hidden">
