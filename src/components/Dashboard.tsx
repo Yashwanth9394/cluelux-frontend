@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logError } from '../services/errorLog';
 
 interface StatsData {
   generatedAt: string;
@@ -33,7 +34,7 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
     fetch(`${DIRECT_API_URL}/stats`, { cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setStats)
-      .catch(e => setError(e.message))
+      .catch(e => { setError(e.message); logError('stats', 503, e.message); })
       .finally(() => setLoading(false));
   }, [authenticated]);
 

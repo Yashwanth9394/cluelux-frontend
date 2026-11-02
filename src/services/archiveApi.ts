@@ -15,6 +15,7 @@
 
 import { getTodayET } from '../lib/dates';
 import { getPlayedSpecialIds } from '../lib/archiveStore';
+import { logError } from './errorLog';
 import specialPack from '../data/special-pack.json';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -88,6 +89,7 @@ export async function fetchArchiveDay(date: string): Promise<PuzzleData> {
     headers: { 'Content-Type': 'application/json' },
   });
   if (!response.ok) {
+    logError('archive', 503, `HTTP ${response.status}`);
     throw new ArchiveUnavailableError('The archive could not be reached. Try again in a moment.');
   }
 

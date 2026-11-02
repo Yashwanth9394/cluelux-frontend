@@ -2,6 +2,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { setUser, type User } from '../lib/auth';
 import { track } from '../lib/analytics';
 import { pullProgress, pushProgress } from '../services/syncService';
+import { logError } from '../services/errorLog';
 
 interface Props {
   source: string;
@@ -36,9 +37,13 @@ export function GoogleSignInButton({ source, onSuccess, size = 'medium' }: Props
         pullProgress().then(() => { pushProgress(); onSuccess(u); });
       } catch (e) {
         console.error('Failed to get user info:', e);
+        logError('google-signin', 401, 'userinfo fetch/parse failed');
       }
     },
-    onError: () => console.error('Google login failed'),
+    onError: () => {
+      console.error('Google login failed');
+      logError('google-signin', 401, 'google onError');
+    },
   });
 
   const isLarge = size === 'large';
