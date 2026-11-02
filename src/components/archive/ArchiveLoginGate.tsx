@@ -20,10 +20,10 @@ export function ArchiveLoginGate({ onLoggedIn, onBack }: Props) {
       <main className="flex-1 max-w-md mx-auto w-full px-4 py-12 text-center">
         <div className="text-4xl mb-4">🔓</div>
         <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          You've used your free play
+          Unlock the full archive
         </h1>
         <p className="mt-3 text-slate-600 dark:text-slate-300 text-sm leading-relaxed max-w-xs mx-auto">
-          Sign in with Google to unlock unlimited archive puzzles, special words, and save your progress.
+          Yesterday's puzzle is free. Sign in with Google to play every earlier day, the special words, and save your progress across devices.
         </p>
 
         <div className="mt-8 flex justify-center">
