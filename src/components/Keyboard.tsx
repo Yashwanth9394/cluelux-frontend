@@ -52,7 +52,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
   }, [onEnter, onBackspace, onKeyPress]);
 
   return (
-    <div className="flex flex-col gap-2 max-w-lg mx-auto w-full px-3 sm:px-4 pb-safe">
+    <div className="flex flex-col gap-1.5 sm:gap-2 max-w-lg mx-auto w-full px-1.5 sm:px-4 pb-safe">
       {KEYBOARD_ROWS.map((row, rowIndex) => (
         <div key={rowIndex} className="flex gap-1 sm:gap-1.5 justify-center">
           {row.map((key) => {
@@ -69,7 +69,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
             return (
               <motion.div
                 key={key}
-                className={isSpecial ? 'shrink-0' : 'flex-1 min-w-0 max-w-[44px]'}
+                className="flex-1 min-w-0"
                 whileTap={!keyDisabled ? {
                   scale: 0.92,
                 } : {}}
@@ -85,7 +85,7 @@ export const Keyboard = memo(function Keyboard({ onKeyPress, onBackspace, onEnte
                   aria-label={key === 'BACK' ? 'Backspace' : undefined}
                   className={`
                     h-14 sm:h-16 border-2
-                    ${isSpecial ? 'px-3 min-w-[56px] sm:min-w-[75px] text-xs sm:text-sm font-extrabold' : 'w-full p-0 text-base sm:text-lg font-bold'}
+                    ${isSpecial ? 'w-full p-0 text-xs sm:text-sm font-extrabold' : 'w-full p-0 text-base sm:text-lg font-bold'}
                     ${key === 'ENTER' && isWordComplete && !disabled
                       ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-700/50 text-indigo-900 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 shadow-[0_0_10px_rgba(99,102,241,0.15)]'
                       : getKeyColor(key)}
