@@ -122,3 +122,17 @@ export function getSpecialRemaining(tier: AccessTier): number {
   if (tier === 'none') return 0;
   return Math.max(0, SPECIAL_DAILY_LIMIT[tier] - getSpecialStartedToday().length);
 }
+
+const ARCHIVE_FREE_KEY = 'cluelux-archive-free';
+
+export function getArchiveFreeUsed(): number {
+  try {
+    return parseInt(localStorage.getItem(ARCHIVE_FREE_KEY) || '0', 10);
+  } catch { return 0; }
+}
+
+export function recordArchiveFreeUse(): void {
+  try {
+    localStorage.setItem(ARCHIVE_FREE_KEY, String(getArchiveFreeUsed() + 1));
+  } catch {}
+}
