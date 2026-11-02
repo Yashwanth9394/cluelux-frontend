@@ -835,7 +835,7 @@ export default function App() {
         <div className="max-w-4xl mx-auto px-4 text-center text-[11px] text-gray-400 dark:text-slate-600 space-y-1">
           <p>#{challenge.gameNumber} · {challenge.date}</p>
           <p>
-            <a href="mailto:cluelux@gmail.com" className="hover:text-gray-600 dark:hover:text-slate-400 transition-colors">Feedback</a>
+            <a href="mailto:hello@cluelux.com" className="hover:text-gray-600 dark:hover:text-slate-400 transition-colors">Feedback</a>
             {' · '}
             <a href="https://instagram.com/cluelux" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 dark:hover:text-slate-400 transition-colors">Instagram</a>
           </p>

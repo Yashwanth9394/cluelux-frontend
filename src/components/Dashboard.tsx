@@ -182,20 +182,20 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
             <ContactCard
               icon="✉️"
               label="Email us"
-              value="cluelux@gmail.com"
-              href="mailto:cluelux@gmail.com"
+              value="hello@cluelux.com"
+              href="mailto:hello@cluelux.com"
             />
             <ContactCard
               icon="🐛"
               label="Report a bug"
-              value="cluelux@gmail.com"
-              href="mailto:cluelux@gmail.com?subject=Bug%20Report%20-%20ClueLux"
+              value="hello@cluelux.com"
+              href="mailto:hello@cluelux.com?subject=Bug%20Report%20-%20ClueLux"
             />
             <ContactCard
               icon="💡"
               label="Feature request"
-              value="cluelux@gmail.com"
-              href="mailto:cluelux@gmail.com?subject=Feature%20Request%20-%20ClueLux"
+              value="hello@cluelux.com"
+              href="mailto:hello@cluelux.com?subject=Feature%20Request%20-%20ClueLux"
             />
             <ContactCard
               icon="📣"
