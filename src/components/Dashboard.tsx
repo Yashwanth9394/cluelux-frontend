@@ -41,7 +41,7 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
       .then(setStats)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [authenticated]);
 
   const handleLogin = () => {
     if (codeInput === adminCode) {
