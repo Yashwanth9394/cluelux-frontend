@@ -9,6 +9,9 @@ interface StatsData {
   apiLatencyAvgMs: number;
   playsByDay: Record<string, number>;
   playsTotal: number;
+  wins: number;
+  losses: number;
+  guessDistribution: Record<string, number>;
   wordsScheduled: number;
   scheduleStart: string;
   scheduleEnd: string;
@@ -130,6 +133,28 @@ export function Dashboard({ onBack, adminCode }: { onBack: () => void; adminCode
             <StatTile label="4xx Errors" value={String(stats.api4xxErrors)} sub="30 days" color={stats.api4xxErrors > 0 ? 'amber' : 'green'} />
             <StatTile label="5xx Errors" value={String(stats.api5xxErrors)} sub="30 days" color={stats.api5xxErrors > 0 ? 'red' : 'green'} />
           </div>
+
+          {/* Player Analytics */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <StatTile label="Wins" value={String(stats.wins)} sub={stats.playsTotal > 0 ? `${Math.round((stats.wins / stats.playsTotal) * 100)}% win rate` : '—'} color="green" />
+            <StatTile label="Losses" value={String(stats.losses)} sub={stats.playsTotal > 0 ? `${Math.round((stats.losses / stats.playsTotal) * 100)}% loss rate` : '—'} color="red" />
+          </div>
+
+          {/* Guess Distribution */}
+          <Section title="Solved by Guess">
+            {Object.values(stats.guessDistribution).every(v => v === 0) ? (
+              <p className="text-sm text-[var(--text-secondary)] py-4">No outcome data yet. Data starts collecting from the next game played.</p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(stats.guessDistribution).map(([guess, count]) => {
+                  const maxGuess = Math.max(...Object.values(stats.guessDistribution), 1);
+                  return (
+                    <BarRow key={guess} label={`Guess ${guess}`} value={count} max={maxGuess} color="bg-emerald-500" />
+                  );
+                })}
+              </div>
+            )}
+          </Section>
 
           {/* API Traffic */}
           <Section title="API Traffic (30 days)">

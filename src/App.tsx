@@ -331,7 +331,7 @@ export default function App() {
       // Daily challenge only - practice completions aren't "today's puzzle"
       // and shouldn't count toward or be compared against that total.
       if (gameMode === 'daily') {
-        recordPlay(challenge.date).then(setPlaysToday);
+        recordPlay(challenge.date, true, newGuesses.length).then(setPlaysToday);
       }
 
       // Steve Jobs: SILENCE is golden
@@ -369,7 +369,7 @@ export default function App() {
       pushProgress();
 
       if (gameMode === 'daily') {
-        recordPlay(challenge.date).then(setPlaysToday);
+        recordPlay(challenge.date, false, newGuesses.length).then(setPlaysToday);
       }
       return;
     }

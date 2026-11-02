@@ -132,9 +132,11 @@ export async function fetchDailyWord(): Promise<DailyWordResponse> {
  * ended either way, so a failed network call here shouldn't disrupt that -
  * it just means no count to show.
  */
-export async function recordPlay(date: string): Promise<number | null> {
+export async function recordPlay(date: string, won?: boolean, guesses?: number): Promise<number | null> {
   try {
-    const url = `${getDirectApiUrl()}/daily-word/plays?date=${date}`;
+    let url = `${getDirectApiUrl()}/daily-word/plays?date=${date}`;
+    if (won !== undefined) url += `&won=${won}`;
+    if (guesses !== undefined) url += `&guesses=${guesses}`;
     const response = await fetch(url, { method: 'POST', cache: 'no-store' });
     if (!response.ok) return null;
     const data = await response.json();
