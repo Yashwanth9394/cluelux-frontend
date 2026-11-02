@@ -116,14 +116,17 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <div className="space-y-2">
             <p className="text-xs text-gray-500 dark:text-gray-400">Sign in to save your progress</p>
             {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => console.error('Google login failed')}
-                size="medium"
-                width="220"
-                theme={isDark ? 'filled_black' : 'outline'}
-                shape="pill"
-              />
+              <div className="rounded-full overflow-hidden inline-flex" style={{ colorScheme: isDark ? 'dark' : 'light' }}>
+                <GoogleLogin
+                  key={isDark ? 'dark' : 'light'}
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => console.error('Google login failed')}
+                  size="medium"
+                  width="220"
+                  theme={isDark ? 'filled_black' : 'outline'}
+                  shape="pill"
+                />
+              </div>
             ) : (
               <p className="text-xs text-gray-400 dark:text-gray-500">Google sign-in not configured</p>
             )}

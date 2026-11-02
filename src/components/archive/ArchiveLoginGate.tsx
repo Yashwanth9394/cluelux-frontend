@@ -50,14 +50,17 @@ export function ArchiveLoginGate({ onLoggedIn, onBack }: Props) {
 
         <div className="mt-8 flex justify-center">
           {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
-            <GoogleLogin
-              onSuccess={handleSuccess}
-              onError={() => console.error('Google login failed')}
-              size="large"
-              theme={isDark ? 'filled_black' : 'outline'}
-              shape="pill"
-              text="continue_with"
-            />
+            <div className="rounded-full overflow-hidden inline-flex" style={{ colorScheme: isDark ? 'dark' : 'light' }}>
+              <GoogleLogin
+                key={isDark ? 'dark' : 'light'}
+                onSuccess={handleSuccess}
+                onError={() => console.error('Google login failed')}
+                size="large"
+                theme={isDark ? 'filled_black' : 'outline'}
+                shape="pill"
+                text="continue_with"
+              />
+            </div>
           ) : (
             <p className="text-sm text-slate-400">Google sign-in is being set up. Check back soon!</p>
           )}
