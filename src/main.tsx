@@ -1,5 +1,6 @@
 
   import { createRoot } from "react-dom/client";
+  import { GoogleOAuthProvider } from "@react-oauth/google";
   import App from "./App.tsx";
   import "./index.css";
   import { applyTheme, getThemePreference, watchSystemTheme } from "./lib/theme";
@@ -9,7 +10,13 @@
   watchSystemTheme();
   initAnalytics();
 
-  createRoot(document.getElementById("root")!).render(<App />);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string || '';
+
+  createRoot(document.getElementById("root")!).render(
+    googleClientId
+      ? <GoogleOAuthProvider clientId={googleClientId}><App /></GoogleOAuthProvider>
+      : <App />
+  );
 
   if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
