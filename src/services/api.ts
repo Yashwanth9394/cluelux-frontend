@@ -2,6 +2,8 @@
  * API Service for fetching daily word from backend
  */
 
+import { track } from '../lib/analytics';
+
 export interface DailyWordResponse {
   date: string;
   word: string;
@@ -74,7 +76,7 @@ function getTodayET(): string {
 /**
  * Fetch today's word and hints from the backend
  */
-export async function fetchDailyWord(signal?: AbortSignal): Promise<DailyWordResponse> {
+export async function fetchDailyWord(signal?: AbortSignal, baseUrl: string = API_BASE_URL): Promise<DailyWordResponse> {
   const preview = getPreviewOverride();
   const sharedDate = getSharedDateOverride();
   let fullUrl: string;
@@ -82,13 +84,13 @@ export async function fetchDailyWord(signal?: AbortSignal): Promise<DailyWordRes
     console.warn(`[DEV PREVIEW] Loading ${preview.date} instead of today. Remove VITE_PREVIEW_DATE from .env.local to go back to normal.`);
     fullUrl = `${PREVIEW_API_URL}/daily-word?previewDate=${preview.date}&previewKey=${preview.key}`;
   } else if (sharedDate) {
-    fullUrl = `${API_BASE_URL}/daily-word?date=${sharedDate}`;
+    fullUrl = `${baseUrl}/daily-word?date=${sharedDate}`;
   } else {
     // Add date as cache-busting parameter
     // This ensures each day gets a unique URL, so CloudFront caches separately
     // No manual invalidation needed! 🎯
     const today = getTodayET();
-    fullUrl = `${API_BASE_URL}/daily-word?v=${today}`;
+    fullUrl = `${baseUrl}/daily-word?v=${today}`;
   }
 
   try {
@@ -140,19 +142,57 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Second route to the word. Prod normally serves it as a static file through
+// CloudFront + S3. If that route fails, alternate attempts go straight to the
+// original API Gateway -> Lambda -> DynamoDB path instead, which shares no
+// piece with the first (different hostname, different origin, computes
+// "today" itself). Only set when the primary is the prod CloudFront URL; on
+// UAT/local the primary already is the API Gateway, so there is no second route.
+const FALLBACK_API_URL: string | null = getDirectApiUrl() !== API_BASE_URL ? getDirectApiUrl() : null;
+
+// Route names reported to analytics. "cdn" = the static file via CloudFront + S3
+// (prod primary), "lambda" = the API Gateway -> Lambda fallback, "api" = the
+// single route on UAT/local.
+const PRIMARY_ROUTE = FALLBACK_API_URL !== null ? 'cdn' : 'api';
+
+/** A short, non-identifying label for why an attempt failed (no URLs, no text). */
+function failureReason(error: unknown): string {
+  if (error instanceof DOMException && error.name === 'AbortError') return 'timeout';
+  const message = error instanceof Error ? error.message : '';
+  const status = message.match(/status: (\d+)/);
+  if (status) return `http_${status[1]}`;
+  if (message.startsWith('Invalid response')) return 'invalid_response';
+  return 'network';
+}
+
 /**
- * fetchDailyWord with retries. Throws the last error if every attempt fails;
- * the caller shows an error screen rather than substituting a made-up word.
+ * fetchDailyWord with retries. Attempts alternate: primary, fallback route,
+ * primary, fallback route (when a fallback route exists). Throws the last
+ * error if every attempt fails; the caller shows an error screen rather than
+ * substituting a made-up word.
+ *
+ * Reports one analytics event per load, `word_load`, saying which route finally
+ * served the word (or "failed"), how many attempts it took, and why each failed
+ * attempt failed - so "who went through S3 and who went through the Lambda"
+ * can be answered per player and per region in PostHog.
  */
 export async function fetchDailyWordWithRetry(): Promise<DailyWordResponse> {
+  const started = Date.now();
+  const failed: { route: string; reason: string }[] = [];
   let lastError: unknown;
   for (let attempt = 0; attempt < WORD_FETCH_ATTEMPTS; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), WORD_FETCH_TIMEOUT_MS);
+    const fallbackUrl = attempt % 2 === 1 ? FALLBACK_API_URL : null;
+    const route = fallbackUrl !== null ? 'lambda' : PRIMARY_ROUTE;
+    const baseUrl = fallbackUrl ?? API_BASE_URL;
     try {
-      return await fetchDailyWord(controller.signal);
+      const data = await fetchDailyWord(controller.signal, baseUrl);
+      track('word_load', { route, attempts: attempt + 1, failed, duration_ms: Date.now() - started });
+      return data;
     } catch (error) {
       lastError = error;
+      failed.push({ route, reason: failureReason(error) });
     } finally {
       clearTimeout(timer);
     }
@@ -161,6 +201,7 @@ export async function fetchDailyWordWithRetry(): Promise<DailyWordResponse> {
       await sleep(Math.random() * ceiling);
     }
   }
+  track('word_load', { route: 'failed', attempts: WORD_FETCH_ATTEMPTS, failed, duration_ms: Date.now() - started });
   throw lastError;
 }
 
