@@ -21,11 +21,9 @@ import type { TileState, KeyState, GameStatus, GameState, HintState, GameMode } 
 import { getCombinedGreeting, getDiscoveryMessage, getVictoryMessage } from './utils/personality';
 
 // Import API service
-import { fetchDailyWord, formatDailyWordForGame, recordPlay } from './services/api';
+import { fetchDailyWordWithRetry, formatDailyWordForGame, recordPlay, EMPTY_CHALLENGE } from './services/api';
+import type { Challenge } from './services/api';
 import { pushProgress } from './services/syncService';
-
-// Fallback data in case API is not available
-import todayData from './data/today.json';
 
 import { shareWithImage } from './lib/shareCard';
 import { RecapCard } from './components/RecapCard';
@@ -78,9 +76,12 @@ function TrophyIcon({ className }: { className?: string }) {
 }
 
 export default function App() {
-  // Today's challenge data - will be loaded from API
-  const [challenge, setChallenge] = useState(todayData);
+  // Today's challenge data, loaded from the API. EMPTY_CHALLENGE is an inert
+  // placeholder that is never shown: until the real word arrives (or if it
+  // can't be fetched) the loading or error screen is rendered instead.
+  const [challenge, setChallenge] = useState<Challenge>(EMPTY_CHALLENGE);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [gameMode, setGameMode] = useState<GameMode>('daily');
   const MAX_GUESSES = getMaxAttempts(challenge.wordLength);
 
@@ -128,32 +129,35 @@ export default function App() {
   const [hintStates, setHintStates] = useState<HintState[]>(() => initializeHints(challenge.hints));
   const [hintsUsedPerGuess, setHintsUsedPerGuess] = useState<boolean[]>([]);
 
-  // Fetch today's word from backend
-  useEffect(() => {
-    async function loadDailyWord() {
-      try {
-        setIsLoading(true);
-        const data = await fetchDailyWord();
-        const formattedData = formatDailyWordForGame(data);
-        setChallenge(formattedData);
-        setHintStates(initializeHints(formattedData.hints));
-      } catch (error) {
-        console.error('Failed to load daily word:', error);
-        toast.error('Using offline word', {
-          description: 'Could not connect to server',
-          duration: 3000,
-        });
-      } finally {
-        setIsLoading(false);
-      }
+  // Fetch today's word from backend (retries with jitter inside
+  // fetchDailyWordWithRetry). If every attempt fails, show the error screen
+  // with a "Try again" button instead of a substitute word.
+  const loadDailyWord = async () => {
+    setLoadFailed(false);
+    setIsLoading(true);
+    try {
+      const data = await fetchDailyWordWithRetry();
+      const formattedData = formatDailyWordForGame(data);
+      setChallenge(formattedData);
+      setHintStates(initializeHints(formattedData.hints));
+    } catch (error) {
+      console.error('Failed to load daily word:', error);
+      setLoadFailed(true);
+    } finally {
+      setIsLoading(false);
     }
-    
+  };
+
+  useEffect(() => {
     loadDailyWord();
   }, []);
 
   // Initialize or restore game
   useEffect(() => {
-    if (isLoading) return; // Wait for word to load
+    // Wait for the word. Also do nothing if it failed to load: with no real
+    // word there is nothing to restore, and the "start fresh" branch below
+    // would wipe the player's saved game.
+    if (isLoading || loadFailed) return;
 
     const savedState = loadGameState();
 
@@ -194,7 +198,7 @@ export default function App() {
       // Start fresh game
       clearGameState();
     }
-  }, [isLoading, challenge]);
+  }, [isLoading, loadFailed, challenge]);
 
   // Keyboard input handling
   useEffect(() => {
@@ -454,6 +458,34 @@ export default function App() {
               <div className="absolute inset-0 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
             <p className="text-gray-600 dark:text-gray-400 font-medium">Loading today's puzzle...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // The word couldn't be fetched after several tries. Only the daily game needs
+  // it, so the other views (archive, vocab, revise) still open normally.
+  if (loadFailed && view === 'daily') {
+    return (
+      <div className="h-full bg-white dark:bg-slate-950 flex flex-col font-sans overflow-hidden">
+        <Toaster />
+
+        <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+          <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight leading-tight text-gray-900 dark:text-gray-100">
+              ClueLux
+            </h1>
+          </div>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div role="alert" className="text-center space-y-4 max-w-sm">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Couldn't load today's puzzle</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              We couldn't reach the server. Check your connection and try again.
+            </p>
+            <Button onClick={loadDailyWord} className="min-h-11 px-6">Try again</Button>
           </div>
         </main>
       </div>

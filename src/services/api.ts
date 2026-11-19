@@ -74,7 +74,7 @@ function getTodayET(): string {
 /**
  * Fetch today's word and hints from the backend
  */
-export async function fetchDailyWord(): Promise<DailyWordResponse> {
+export async function fetchDailyWord(signal?: AbortSignal): Promise<DailyWordResponse> {
   const preview = getPreviewOverride();
   const sharedDate = getSharedDateOverride();
   let fullUrl: string;
@@ -102,6 +102,7 @@ export async function fetchDailyWord(): Promise<DailyWordResponse> {
       headers: {
         'Content-Type': 'application/json',
       },
+      signal,
     });
 
     if (!response.ok) {
@@ -122,6 +123,45 @@ export async function fetchDailyWord(): Promise<DailyWordResponse> {
     // Throw error so App.tsx can handle fallback properly
     throw error;
   }
+}
+
+// A failed word fetch is usually transient (a flaky mobile connection, a cold
+// connection, a brief edge hiccup), so try a few times before giving up.
+// "Full jitter" backoff: wait a random time between 0 and an exponentially
+// growing ceiling, so players who fail at the same moment don't all retry in
+// the same instant. (Pattern: AWS Architecture Blog, "Exponential Backoff And
+// Jitter".)
+const WORD_FETCH_ATTEMPTS = 4; // 1 try + 3 retries
+const WORD_FETCH_BASE_DELAY_MS = 500;
+const WORD_FETCH_MAX_DELAY_MS = 4000;
+const WORD_FETCH_TIMEOUT_MS = 8000; // a hung request counts as a failure
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * fetchDailyWord with retries. Throws the last error if every attempt fails;
+ * the caller shows an error screen rather than substituting a made-up word.
+ */
+export async function fetchDailyWordWithRetry(): Promise<DailyWordResponse> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < WORD_FETCH_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), WORD_FETCH_TIMEOUT_MS);
+    try {
+      return await fetchDailyWord(controller.signal);
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (attempt < WORD_FETCH_ATTEMPTS - 1) {
+      const ceiling = Math.min(WORD_FETCH_MAX_DELAY_MS, WORD_FETCH_BASE_DELAY_MS * 2 ** attempt);
+      await sleep(Math.random() * ceiling);
+    }
+  }
+  throw lastError;
 }
 
 /**
@@ -180,3 +220,21 @@ export function formatDailyWordForGame(data: DailyWordResponse) {
     },
   };
 }
+
+export type Challenge = ReturnType<typeof formatDailyWordForGame>;
+
+/**
+ * Inert stand-in held in state until the real word arrives. It is never shown
+ * to a player: App renders a loading screen, or an error screen if the fetch
+ * fails, instead of the game board. It deliberately contains no real word.
+ */
+export const EMPTY_CHALLENGE: Challenge = {
+  date: '',
+  gameNumber: 0,
+  wordLength: 0,
+  answer: '',
+  answerLower: '',
+  hints: [],
+  validWords: [],
+  metadata: { difficulty: '', category: '', generatedAt: '', fact: undefined },
+};
