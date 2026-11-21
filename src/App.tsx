@@ -25,7 +25,7 @@ import { fetchDailyWordWithRetry, formatDailyWordForGame, recordPlay, EMPTY_CHAL
 import type { Challenge } from './services/api';
 import { pushProgress } from './services/syncService';
 
-import { shareWithImage } from './lib/shareCard';
+import { shareResult } from './lib/shareCard';
 import { RecapCard } from './components/RecapCard';
 import { SettingsDialog } from './components/SettingsDialog';
 import { ArchiveExperience } from './components/archive/ArchiveExperience';
@@ -415,12 +415,11 @@ export default function App() {
   const handleShare = async () => {
     const totalHintsUsed = getRevealedHintsCount(hintStates);
 
-    const result = await shareWithImage({
+    const result = await shareResult({
       gameNumber: challenge.gameNumber,
       evaluations,
       hintsUsed: totalHintsUsed,
       won: gameStatus === 'won',
-      wordLength: challenge.wordLength,
     });
 
     if (result === 'shared') {
